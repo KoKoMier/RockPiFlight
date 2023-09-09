@@ -1,7 +1,0 @@
-[
-{
-  "directory": "/root/rock/flight-control/build",
-  "command": "/usr/bin/aarch64-linux-gnu-g++   -g -o CMakeFiles/flight.dir/main.cpp.o -c /root/rock/flight-control/main.cpp",
-  "file": "/root/rock/flight-control/main.cpp"
-}
-]
