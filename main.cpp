@@ -10,6 +10,7 @@
 #include "src/UART/uart.hpp"
 #include <sys/time.h>
 
+int signalIn = 0;
 int TimestartUpLoad = 0;
 
 void dataParese(std::string data, std::string *databuff, const char splti, int MaxSize)
@@ -38,7 +39,7 @@ int main(int argc, char *argv[])
     int argvs;
     TimestartUpLoad = GetTimestamp();
 
-    while ((argvs = getopt(argc, argv, "s::g::c::C:f:R:")) != -1)
+    while ((argvs = getopt(argc, argv, "s::g::r::c::f::R")) != -1)
     {
         switch (argvs)
         {
@@ -79,23 +80,21 @@ int main(int argc, char *argv[])
             {
                 pca9685PWMWrite(fd, 16, 0, sp);
             }
-            
-
         }
         break;
 
-        case 'c':
+        case 'R':
         {
             long int time;
             long int timee;
-            CRSFCRSFUartRC test(optarg);
+            CRSF test(optarg);
             int channelData[50];
 
             while (true)
             {
                 time = GetTimestamp() - TimestartUpLoad;
                 //
-                int retValue = test.CRSFRead(channelData, -1, -1);
+                int retValue = test.CRSFRead(channelData);
                 if (retValue > 0)
                 {
                     for (size_t i = 0; i < 15; i++)
@@ -106,16 +105,45 @@ int main(int argc, char *argv[])
                 }
                 else
                 {
-                    std::cout << " error frame recived"
+                    std::cout << "error frame recived"
                               << "\n";
                 }
                 //
                 timee = GetTimestamp() - TimestartUpLoad;
                 std::cout << "ret: " << retValue
-                          << "last frame time : " << timee - time << " "
+                          << " last frame time : " << timee - time << " "
                           << "\n";
             }
         } break;
+
+        case 'c':
+        {
+            int fd = pca9685Setup("/dev/i2c-7", 0x70, 400);
+            int sp=1800;
+            char input;
+
+            struct termios old_tio, new_tio;
+            tcgetattr(STDIN_FILENO, &old_tio);
+            new_tio = old_tio;
+            new_tio.c_lflag &=(~ICANON & ~ECHO);
+            tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
+
+            while (true)
+            {
+                std::cin >> input;
+                if (input == 'w')
+                    sp += 10;
+                else if (input == 's')
+                    sp -= 10;
+                else if (input == 'q')
+                    break;
+                pca9685PWMWrite(fd, 16, 0, sp);
+                std::cout<<"sp = " << sp << "\r\n";
+            }
+            tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
+        }
+        break;
+
     }
     }
 }
