@@ -139,6 +139,7 @@ int main(int argc, char *argv[])
                     break;
                 pca9685PWMWrite(fd, 16, 0, sp);
                 std::cout<<"sp = " << sp << "\r\n";
+                std::cout<<"666";
             }
             tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
         }
