@@ -74,10 +74,10 @@ int main(int argc, char *argv[])
         case 'g':
         {
             int fd = pca9685Setup("/dev/i2c-7", 0x70, 400);
-            int sp;
-            std::cin >> sp;
             while (true)
             {
+                int sp;
+                std::cin >> sp;
                 pca9685PWMWrite(fd, 16, 0, sp);
             }
         }
