@@ -9,3 +9,6 @@ project (Demo)
 set(src_dir main.cpp )
 add_executable(flight ${src_dir})
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+target_link_libraries(flight PRIVATE Threads::Threads)

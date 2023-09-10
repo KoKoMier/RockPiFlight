@@ -9,6 +9,7 @@
 #include "src/UART/CRSFProtocol.hpp"
 #include "src/UART/uart.hpp"
 #include <sys/time.h>
+#include <thread>
 
 
 float pid_p_gain_roll = 0;
@@ -154,7 +155,7 @@ int main(int argc, char *argv[])
 
             int fd = pca9685Setup("/dev/i2c-7", 0x70, 400);
             int pwmValue[4]={1800,1800,1800,1800};
-            char input;
+            char input = ' ';
 
             struct termios old_tio, new_tio;
             tcgetattr(STDIN_FILENO, &old_tio);
@@ -162,18 +163,23 @@ int main(int argc, char *argv[])
             new_tio.c_lflag &=(~ICANON & ~ECHO);
             tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
-            while (true)
-            {
-                SensorsParse();
-                std::cin >> input;
+            std::thread inputThread([&input,&pwmValue]{
+                while (true) {
+                    std::cin >> input;
                 if (input == 'w')
                     for(int i=0; i<4; i++) pwmValue[i] += 10;
                 else if (input == 's')
-                    for(int i=0; i<4; i++) pwmValue[i] += 10;
+                    for(int i=0; i<4; i++) pwmValue[i] -= 10;
                 else if (input == 'q')
                     break;
+                }
+            });
 
-                gyro_roll_input = Angle_Roll;
+            while (true)
+            {
+                SensorsParse();
+
+                gyro_roll_input = 0.8 * gyro_roll_input + 0.2 * Angle_Roll;
                 pid_roll_error = gyro_roll_input - pid_roll_setpoint;
                 pid_i_sum_roll += pid_i_gain_roll * pid_roll_error;
                 pid_output_roll = pid_p_gain_roll * pid_roll_error 
@@ -181,7 +187,7 @@ int main(int argc, char *argv[])
                                 + pid_d_gain_roll * (pid_roll_error - pid_last_d_err);
                 pid_last_d_err = pid_roll_error;
 
-                gyro_pitch_input = Angle_Pitch;
+                gyro_pitch_input = 0.8 * gyro_pitch_input + 0.2 * Angle_Pitch;
                 pid_pitch_error = gyro_pitch_input - pid_pitch_setpoint;
                 pid_i_sum_pitch += pid_i_gain_pitch * pid_pitch_error;
                 pid_output_pitch = pid_p_gain_pitch * pid_pitch_error 
@@ -194,15 +200,15 @@ int main(int argc, char *argv[])
                 pca9685PWMWrite(fd, 2, 0, limitValue(pwmValue[2]));
                 pca9685PWMWrite(fd, 3, 0, limitValue(pwmValue[3]));
 
-                std::cout<<"------------------------------------";
+                std::cout<<"------------------------------------"<< "\r\n";
                 std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Pitch << "\r\n";
                 std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << gyro_roll_input << "\r\n";
-                std::cout<<"------------------------------------";
+                std::cout<<"------------------------------------"<< "\r\n";
                 std::cout<<"sp = " << pwmValue[0] << "\r\n";
                 std::cout<<"sp = " << pwmValue[1] << "\r\n";
                 std::cout<<"sp = " << pwmValue[2] << "\r\n";
                 std::cout<<"sp = " << pwmValue[3] << "\r\n";
-                std::cout<<"------------------------------------";
+                std::cout<<"------------------------------------"<< "\r\n";
 
             }
             tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
