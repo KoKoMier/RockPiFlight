@@ -38,6 +38,10 @@ float pid_i_sum_pitch = 0;
 float pid_output_pitch = 0;
 float pid_last_d_err_pitch = 0;
 
+int pin1 = 11;
+int pin2 = 15;
+int pin3 = 14;
+int pin4 = 12;
 void dataParese(std::string data, std::string *databuff, const char splti, int MaxSize)
 {
     std::istringstream f(data);
@@ -53,8 +57,8 @@ void dataParese(std::string data, std::string *databuff, const char splti, int M
 }
 
 float limitValue(float value) {
-    if (value > 1900) {
-        return 1900;
+    if (value > 3200) {
+        return 3200;
     } else {
         return value;
     }
@@ -167,9 +171,9 @@ int main(int argc, char *argv[])
                 while (true) {
                     std::cin >> input;
                 if (input == 'w')
-                    for(int i=0; i<4; i++) pwmValue[i] += 10;
+                    for(int i=0; i<4; i++) pwmValue[i] += 3;
                 else if (input == 's')
-                    for(int i=0; i<4; i++) pwmValue[i] -= 10;
+                    for(int i=0; i<4; i++) pwmValue[i] -= 3;
                 else if (input == 'q')
                     break;
                 }
@@ -195,14 +199,14 @@ int main(int argc, char *argv[])
                                 + pid_d_gain_pitch * (pid_pitch_error - pid_last_d_err_pitch);
                 pid_last_d_err_pitch = pid_pitch_error;       
 
-                pca9685PWMWrite(fd, 0, 0, limitValue(pwmValue[0]));
-                pca9685PWMWrite(fd, 1, 0, limitValue(pwmValue[1]));
-                pca9685PWMWrite(fd, 2, 0, limitValue(pwmValue[2]));
-                pca9685PWMWrite(fd, 3, 0, limitValue(pwmValue[3]));
+                pca9685PWMWrite(fd, pin1, 0, limitValue(pwmValue[0]));
+                pca9685PWMWrite(fd, pin2, 0, limitValue(pwmValue[1]));
+                pca9685PWMWrite(fd, pin3, 0, limitValue(pwmValue[2]));
+                pca9685PWMWrite(fd, pin4, 0, limitValue(pwmValue[3]));
 
                 std::cout<<"------------------------------------"<< "\r\n";
-                std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Pitch << "\r\n";
-                std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << gyro_roll_input << "\r\n";
+                std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch << "\r\n";
+                std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << gyro_roll_input << "\r\n";
                 std::cout<<"------------------------------------"<< "\r\n";
                 std::cout<<"sp = " << pwmValue[0] << "\r\n";
                 std::cout<<"sp = " << pwmValue[1] << "\r\n";
