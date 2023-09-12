@@ -9,7 +9,7 @@ Features
 - Communicating with hardware through UART and SPI interfaces
 How to Use
 
-1. Clone this repository to your local machine: git clone https://github.com/your_username/your_repository.git
+1. Clone this repository to your local machine: git clone https://github.com/KoKoMier/flight-control
 2. Compile the project: cmake . && make
 3. Run the program: ./flight
 Dependencies
