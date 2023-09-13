@@ -12,6 +12,15 @@ int _mpu_6500_GZ;
 int _mpu_6500_AX;
 int _mpu_6500_AY;
 int _mpu_6500_AZ;
+
+float Angle_Roll_Out;
+float Angle_Pitch_Out;
+float mpu_6500_GX_Now = 0.0;
+float mpu_6500_GY_Now = 0.0;
+float mpu_6500_GZ_Now = 0.0;
+float mpu_6500_GX_Last = 0.0;
+float mpu_6500_GY_Last = 0.0;
+float mpu_6500_GZ_Last = 0.0;
 float mpu_6500_GX;
 float mpu_6500_GY;
 float mpu_6500_GZ;
@@ -21,12 +30,13 @@ float mpu_6500_AZ;
 float _mpu_6500_AX_;
 float _mpu_6500_AY_;
 float _mpu_6500_AZ_;
-
+float _mpu_6500_AX__;
+float _mpu_6500_AY__;
+float _mpu_6500_AZ__;
 //
 float Angle_Pitch;
 float Angle_Roll;
 float Angle_Yaw;
-
 
 //
 bool set_groy_angles = false;
@@ -60,7 +70,6 @@ void read_mpu_6500_data()
     _mpu_6500_AX = Tmp_AX;
     _mpu_6500_AY = Tmp_AY;
     _mpu_6500_AZ = Tmp_AZ;
-
 }
 
 void SensorsAcorrect()
@@ -71,21 +80,59 @@ void SensorsAcorrect()
         _mpu_6500_AX_ += _mpu_6500_AX;
         _mpu_6500_AY_ += _mpu_6500_AY;
         _mpu_6500_AZ_ += _mpu_6500_AZ;
+
+        mpu_6500_GX_Now = ((_mpu_6500_GX / 16384.0) + 1.5) * 19.6 / 2.24 - 9.605;
+        mpu_6500_GY_Now = ((_mpu_6500_GY / 16384.0) + 0.84) * 19.6 / 2.24 - 10.07;
+        mpu_6500_GZ_Now = ((_mpu_6500_GZ / 16384.0) + 1.5) * 19.6 / 2.24 - 9.8;
+
+        _mpu_6500_AX__ += mpu_6500_GX_Now;
+        _mpu_6500_AY__ += mpu_6500_GY_Now;
+        _mpu_6500_AZ__ += mpu_6500_GZ_Now;
+
         usleep(3);
     }
+    // std::cout << "mpu_6500_GX:" << _mpu_6500_AY__ << "\r\n";
     _mpu_6500_AX_ /= 2000;
     _mpu_6500_AY_ /= 2000;
     _mpu_6500_AZ_ /= 2000;
+    _mpu_6500_AX__ /= 2000;
+    _mpu_6500_AY__ /= 2000;
+    _mpu_6500_AZ__ /= 2000;
 }
 
 void SensorsParse()
 {
     read_mpu_6500_data();
-    mpu_6500_GX = (_mpu_6500_GX / 16384.0) * (9.8 * 2 / (22.5)) + 0.29;
-    mpu_6500_GY = (_mpu_6500_GY / 16384.0) * (9.8 * 2 / (22.6)) - 0.26;
-    mpu_6500_GZ = (_mpu_6500_GZ / 16384.0) * (9.8 * 2 / (22)) + 0.31;
-    Angle_Pitch = asin((mpu_6500_GX) / 0.98) * 180 / 3.14;
-    Angle_Roll = asin((mpu_6500_GY) / 0.98) * 180 / 3.14;
+
+    mpu_6500_GX_Now = ((_mpu_6500_GX / 16384.0) + 1.5) * 19.6 / 2.24 - 9.605;
+    mpu_6500_GY_Now = ((_mpu_6500_GY / 16384.0) + 0.84) * 19.6 / 2.24 - 10.07;
+    mpu_6500_GZ_Now = ((_mpu_6500_GZ / 16384.0) + 1.5) * 19.6 / 2.24 - 9.8;
+
+    mpu_6500_GX = (0.3 * mpu_6500_GX_Now + 0.7 * mpu_6500_GX_Last);
+    mpu_6500_GY = (0.3 * mpu_6500_GY_Now + 0.7 * mpu_6500_GY_Last);
+    mpu_6500_GZ = (0.3 * mpu_6500_GZ_Now + 0.7 * mpu_6500_GZ_Last);
+
+    mpu_6500_GX_Last = mpu_6500_GX;
+    mpu_6500_GY_Last = mpu_6500_GY;
+    mpu_6500_GZ_Last = mpu_6500_GZ;
+
+    mpu_6500_GX -= _mpu_6500_AX__;
+    mpu_6500_GY -= _mpu_6500_AY__;
+    mpu_6500_GZ -= _mpu_6500_AZ__;
+    //std::cout << "mpu_6500_GX:" << mpu_6500_GX << "\r\n";
+    //std::cout << "mpu_6500_GY:" << mpu_6500_GY << "\r\n";
+    //std::cout << "mpu_6500_GZ:" << _mpu_6500_AY__ << "\r\n";
+
+    float gx = mpu_6500_GX / 9.8;
+    gx = gx > 1.0 ? 1.0 : (gx < -1.0 ? -1.0 : gx);
+    Angle_Roll = asin(gx) * 180 / 3.14;
+
+    float gy = mpu_6500_GY / 9.8;
+    gy = gy > 1.0 ? 1.0 : (gy < -1.0 ? -1.0 : gy);
+    Angle_Pitch = asin(gy) * 180 / 3.14;
+
+    //std::cout << "Angle_Pitch:" << Angle_Pitch << "\r\n";
+    //std::cout << "Angle_Roll:" << Angle_Roll << "\r\n";
 
     mpu_6500_AX = _mpu_6500_AX - _mpu_6500_AX_;
     mpu_6500_AY = _mpu_6500_AY - _mpu_6500_AY_;
@@ -100,9 +147,9 @@ void SensorsParse()
         Angle_Roll = Angle_Roll * 0.9996 + Angle_roll_Acc * 0.0004;
         Angle_Pitch = Angle_Pitch * 0.9996 + Angle_pitch_Acc * 0.0004;
         Angle_Yaw += mpu_6500_AY;
-        
-        float Angle_Roll_Out = 0.7 * Angle_Roll + 0.3 * Angle_Roll_last;
-        float Angle_Pitch_Out = 0.7 * Angle_Pitch + 0.3 * Angle_Pitch_last;
+
+        Angle_Roll_Out = 0.7 * Angle_Roll + 0.3 * Angle_Roll_last;
+        Angle_Pitch_Out = 0.7 * Angle_Pitch + 0.3 * Angle_Pitch_last;
         Angle_Roll_last = Angle_Roll_Out;
         Angle_Pitch_last = Angle_Pitch_Out;
     }
@@ -113,4 +160,3 @@ void SensorsParse()
         set_groy_angles = true;
     }
 }
-
