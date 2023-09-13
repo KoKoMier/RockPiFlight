@@ -108,6 +108,8 @@ void SensorsParse()
     mpu_6500_GY_Now = ((_mpu_6500_GY / 16384.0) + 0.84) * 19.6 / 2.24 - 10.07;
     mpu_6500_GZ_Now = ((_mpu_6500_GZ / 16384.0) + 1.5) * 19.6 / 2.24 - 9.8;
 
+    //std::cout << "mpu_6500_GX:" << mpu_6500_GX << "\r\n";
+
     mpu_6500_GX = (0.3 * mpu_6500_GX_Now + 0.7 * mpu_6500_GX_Last);
     mpu_6500_GY = (0.3 * mpu_6500_GY_Now + 0.7 * mpu_6500_GY_Last);
     mpu_6500_GZ = (0.3 * mpu_6500_GZ_Now + 0.7 * mpu_6500_GZ_Last);
