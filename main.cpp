@@ -10,6 +10,7 @@
 #include "src/UART/uart.hpp"
 #include <sys/time.h>
 #include <thread>
+#include "src/SYS/sys.hpp"
 
 float pid_p_gain_roll = 0;
 float pid_i_gain_roll = 0;
@@ -97,8 +98,8 @@ int main(int argc, char *argv[])
                 // std::cout << "mpu_6500_GZ:" << std::fixed << std::setprecision(5) << mpu_6500_GZ << "\r\n";
                 // std::cout << "---------------------------"
                 //         << "\r\n";
-                std::cout << "Angle_Pitch_Out:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
-                std::cout << "Angle_Roll_Out:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
+                //std::cout << "Angle_Pitch_Out:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
+                //std::cout << "Angle_Roll_Out:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
                 // std::cout << "Tmp_AY:" << std::fixed << std::setprecision(2) << mpu_6500_AY
                 //         << "\r\n";
                 std::cout << "---------------------------"
@@ -182,6 +183,7 @@ int main(int argc, char *argv[])
 
             while (true)
             {
+                int microstart = GetTimestamp();
                 SensorsParse();
 
                 gyro_roll_input = 0.8 * gyro_roll_input + 0.2 * Angle_Roll;
@@ -201,18 +203,22 @@ int main(int argc, char *argv[])
                 pca9685PWMWrite(fd, pin3, 0, limitValue(pwmValue[2]));
                 pca9685PWMWrite(fd, pin4, 0, limitValue(pwmValue[3]));
 
-                std::cout << "------------------------------------"
-                          << "\r\n";
-                std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch << "\r\n";
-                std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << gyro_roll_input << "\r\n";
-                std::cout << "------------------------------------"
-                          << "\r\n";
-                std::cout << "sp = " << pwmValue[0] << "\r\n";
-                std::cout << "sp = " << pwmValue[1] << "\r\n";
-                std::cout << "sp = " << pwmValue[2] << "\r\n";
-                std::cout << "sp = " << pwmValue[3] << "\r\n";
-                std::cout << "------------------------------------"
-                          << "\r\n";
+                // std::cout << "------------------------------------"
+                //           << "\r\n";
+                // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch << "\r\n";
+                // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << gyro_roll_input << "\r\n";
+                // std::cout << "------------------------------------"
+                //           << "\r\n";
+                // std::cout << "sp = " << pwmValue[0] << "\r\n";
+                // std::cout << "sp = " << pwmValue[1] << "\r\n";
+                // std::cout << "sp = " << pwmValue[2] << "\r\n";
+                // std::cout << "sp = " << pwmValue[3] << "\r\n";
+                // std::cout << "------------------------------------"
+                //           << "\r\n";
+
+                int microend = GetTimestamp();
+                // std::cout << "time = " << microend - microstart << "\r\n";
+                usleep(8000- (microend - microstart));//125Hz
             }
             tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
         }
