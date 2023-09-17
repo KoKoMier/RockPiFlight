@@ -5,9 +5,9 @@
 #include <iomanip>
 #include <cmath>
 
-float MPU_6500_LSB = 65.5 * 2.0;
-float UpdateFreq = 1000000.0 / 8000.0;//运行频率
-float x_gain = 1.0 / 104.0 * 90.0;
+float pi = 3.14159265358979323;
+float MPU_6500_LSB = 65.5 / 4;
+float UpdateFreq = 1000000.0 / 4000.0; // 运行频率
 //
 int _mpu_6500_GX;
 int _mpu_6500_GY;
@@ -18,24 +18,32 @@ int _mpu_6500_AZ;
 
 float Angle_Roll_Out;
 float Angle_Pitch_Out;
+
 float mpu_6500_GX_Now = 0.0;
 float mpu_6500_GY_Now = 0.0;
 float mpu_6500_GZ_Now = 0.0;
 float mpu_6500_GX_Last = 0.0;
 float mpu_6500_GY_Last = 0.0;
 float mpu_6500_GZ_Last = 0.0;
-float mpu_6500_GX;//x轴角速度
-float mpu_6500_GY;//y轴角速度
-float mpu_6500_GZ;//z轴角速度
-float mpu_6500_AX;//x轴加速度
-float mpu_6500_AY;//y轴加速度
-float mpu_6500_AZ;//z轴加速度
-float _mpu_6500_AX_;//加速度初始值
-float _mpu_6500_AY_;//加速度初始值
-float _mpu_6500_AZ_;//加速度初始值
-float _mpu_6500_GX_;//x轴角速度校准值
-float _mpu_6500_GY_;//y轴角速度校准值
-float _mpu_6500_GZ_;//z轴角速度校准值
+
+float mpu_6500_GX; // x轴角速度
+float mpu_6500_GY; // y轴角速度
+float mpu_6500_GZ; // z轴角速度
+float mpu_6500_AX; // x轴加速度
+float mpu_6500_AY; // y轴加速度
+float mpu_6500_AZ; // z轴加速度
+
+float _mpu_6500_AX_Cali; // x轴加速度校准值
+float _mpu_6500_AY_Cali; // y轴加速度校准值
+float _mpu_6500_AZ_Cali; // z轴加速度校准值
+
+float _mpu_6500_GX_Cali = 0.0; // x轴角速度校准值
+float _mpu_6500_GY_Cali = 0.0; // y轴角速度校准值
+float _mpu_6500_GZ_Cali = 0.0; // z轴角速度校准值
+
+float Angle_Pitch_Acc_Cali = 0.0;  // 校准值
+float Angle_Roll_Acc_Cali = 0.0;   // 校准值
+float Acc_Total_Vector_Cali = 0.0; // 校准值
 //
 float Angle_Pitch = 0.0;
 float Angle_Roll = 0.0;
@@ -55,18 +63,17 @@ bool set_groy_angles = false;
 float Angle_Roll_last = 0;
 float Angle_Pitch_last = 0;
 
+float MPU6500_SPI_Freq = 400000;
 //
-int fd = _s_spiOpen("/dev/spidev1.0", 400000, 0);
+int fd = _s_spiOpen("/dev/spidev2.0", MPU6500_SPI_Freq, 0);
+int count = 0;
 
 void read_mpu_6500_data()
 {
     uint8_t Tmp_MPU6500_SPI_BufferX[8] = {0};
-    Tmp_MPU6500_SPI_BufferX[0] = 0x1C;
-    Tmp_MPU6500_SPI_BufferX[1] = 0x00;
-    _s_spiWrite(fd, Tmp_MPU6500_SPI_BufferX, 400000, 3);
     //
     Tmp_MPU6500_SPI_BufferX[0] = 0xBA;
-    _s_spiXfer(fd, Tmp_MPU6500_SPI_BufferX, Tmp_MPU6500_SPI_BufferX, 400000, 8);
+    _s_spiXfer(fd, Tmp_MPU6500_SPI_BufferX, Tmp_MPU6500_SPI_BufferX, MPU6500_SPI_Freq, 8);
     int Tmp_AX = (short)((int)Tmp_MPU6500_SPI_BufferX[1 + 1] << 8 | (int)Tmp_MPU6500_SPI_BufferX[2 + 1]);
     int Tmp_AY = (short)((int)Tmp_MPU6500_SPI_BufferX[3 + 1] << 8 | (int)Tmp_MPU6500_SPI_BufferX[4 + 1]);
     int Tmp_AZ = (short)((int)Tmp_MPU6500_SPI_BufferX[5 + 1] << 8 | (int)Tmp_MPU6500_SPI_BufferX[6 + 1]);
@@ -75,7 +82,7 @@ void read_mpu_6500_data()
     _mpu_6500_AZ = Tmp_AZ;
 
     Tmp_MPU6500_SPI_BufferX[0] = 0xC3;
-    _s_spiXfer(fd, Tmp_MPU6500_SPI_BufferX, Tmp_MPU6500_SPI_BufferX, 400000, 8);
+    _s_spiXfer(fd, Tmp_MPU6500_SPI_BufferX, Tmp_MPU6500_SPI_BufferX, MPU6500_SPI_Freq, 8);
     int Tmp_GX = (short)((int)Tmp_MPU6500_SPI_BufferX[1] << 8 | (int)Tmp_MPU6500_SPI_BufferX[2]);
     int Tmp_GY = (short)((int)Tmp_MPU6500_SPI_BufferX[3] << 8 | (int)Tmp_MPU6500_SPI_BufferX[4]);
     int Tmp_GZ = (short)((int)Tmp_MPU6500_SPI_BufferX[5] << 8 | (int)Tmp_MPU6500_SPI_BufferX[6]);
@@ -86,66 +93,146 @@ void read_mpu_6500_data()
 
 void SensorsAcorrect()
 {
+    uint8_t MPU6500_SPI_Config_RESET[2] = {0x6b, 0x80};
+    _s_spiWrite(fd, MPU6500_SPI_Config_RESET, MPU6500_SPI_Freq, 2); // reset
+    usleep(500);
+    uint8_t MPU6500_SPI_Config_RESET2[2] = {0x68, 0x07};
+    _s_spiWrite(fd, MPU6500_SPI_Config_RESET2, MPU6500_SPI_Freq, 2); //
+    usleep(500);
+    uint8_t MPU6500_SPI_Config_RESET3[2] = {0x6b, 0x00};
+    _s_spiWrite(fd, MPU6500_SPI_Config_RESET3, MPU6500_SPI_Freq, 2); //
+    usleep(500);
+    uint8_t MPU6500_SPI_Config_RESET4[2] = {0x6b, 0x01};
+    _s_spiWrite(fd, MPU6500_SPI_Config_RESET4, MPU6500_SPI_Freq, 2); //
+    usleep(1000);
+
+    uint8_t MPU6500_SPI_Config_ALPF[2] = {0x1d, 0x00};
+    _s_spiWrite(fd, MPU6500_SPI_Config_ALPF, MPU6500_SPI_Freq, 2); //
+    usleep(15);
+    uint8_t MPU6500_SPI_Config_Acce[2] = {0x1c, 0x18};
+    _s_spiWrite(fd, MPU6500_SPI_Config_Acce, MPU6500_SPI_Freq, 2); //
+    usleep(15);
+    uint8_t MPU6500_SPI_Config_Gyro[2] = {0x1b, 0x18};
+    _s_spiWrite(fd, MPU6500_SPI_Config_Gyro, MPU6500_SPI_Freq, 2); //
+    usleep(15);
+    uint8_t MPU6500_SPI_Config_GLPF[2] = {0x1a, 0x00};
+    _s_spiWrite(fd, MPU6500_SPI_Config_GLPF, MPU6500_SPI_Freq, 2); //
+    usleep(15);
+
+    uint8_t MPU6500_SPI_Config_INTC[2] = {0x37, 0x22};
+    _s_spiWrite(fd, MPU6500_SPI_Config_INTC, MPU6500_SPI_Freq, 2);
+    usleep(500);
+    uint8_t MPU6500_SPI_Config_INTE[2] = {0x38, 0x01};
+    _s_spiWrite(fd, MPU6500_SPI_Config_INTE, MPU6500_SPI_Freq, 2);
+    usleep(500);
+
     for (int i = 0; i < 2000; i++)
     {
         read_mpu_6500_data();
 
-        _mpu_6500_GX_ += _mpu_6500_GX;
-        _mpu_6500_GY_ += _mpu_6500_GY;
-        _mpu_6500_GZ_ += _mpu_6500_GZ;
+        _mpu_6500_GX_Cali += _mpu_6500_GX;
+        _mpu_6500_GY_Cali += _mpu_6500_GY;
+        _mpu_6500_GZ_Cali += _mpu_6500_GZ;
+
+        _mpu_6500_AX_Cali += _mpu_6500_AX;
+        _mpu_6500_AY_Cali += _mpu_6500_AY;
+        _mpu_6500_AZ_Cali += _mpu_6500_AZ;
 
         usleep(300);
     }
     // std::cout << "mpu_6500_GX:" << _mpu_6500_AY__ << "\r\n";
-    _mpu_6500_GX_ /= 2000;
-    _mpu_6500_GY_ /= 2000;
-    _mpu_6500_GZ_ /= 2000;
+    _mpu_6500_GX_Cali = _mpu_6500_GX_Cali / 2000;
+    _mpu_6500_GY_Cali = _mpu_6500_GY_Cali / 2000;
+    _mpu_6500_GZ_Cali = _mpu_6500_GZ_Cali / 2000;
+
+    _mpu_6500_AX_Cali = _mpu_6500_AX_Cali / 2000;
+    _mpu_6500_AY_Cali = _mpu_6500_AY_Cali / 2000;
+    _mpu_6500_AZ_Cali = _mpu_6500_AZ_Cali / 2000;
+
+    // std::cout << "mpu_6500_AX:" << _mpu_6500_AX_Cali << "\r\n";
+    // std::cout << "mpu_6500_AY:" << _mpu_6500_AY_Cali << "\r\n";
+    // std::cout << "mpu_6500_AZ:" << _mpu_6500_AZ_Cali << "\r\n";
 }
 
 void SensorsParse()
 {
     read_mpu_6500_data();
 
-    mpu_6500_GX_Now = _mpu_6500_GX - _mpu_6500_GX_;
-    mpu_6500_GY_Now = _mpu_6500_GY - _mpu_6500_GY_;
-    mpu_6500_GZ_Now = _mpu_6500_GZ - _mpu_6500_GZ_;
+    mpu_6500_GX_Now = (_mpu_6500_GX - _mpu_6500_GX_Cali) / MPU_6500_LSB;
+    mpu_6500_GY_Now = (_mpu_6500_GY - _mpu_6500_GY_Cali) / MPU_6500_LSB;
+    mpu_6500_GZ_Now = (_mpu_6500_GZ - _mpu_6500_GZ_Cali) / MPU_6500_LSB;
 
-    //滤波得到角速度
-    mpu_6500_GX = (0.3 * mpu_6500_GX_Now / MPU_6500_LSB + 0.7 * mpu_6500_GX_Last);
-    mpu_6500_GY = (0.3 * mpu_6500_GY_Now / MPU_6500_LSB + 0.7 * mpu_6500_GY_Last);
-    mpu_6500_GZ = (0.3 * mpu_6500_GZ_Now / MPU_6500_LSB + 0.7 * mpu_6500_GZ_Last);
+    // std::cout << "GZ" << mpu_6500_GZ / MPU_6500_LSB / UpdateFreq << "\r\n";
+    // 滤波得到角速度
+    mpu_6500_GX = (0.3 * mpu_6500_GX_Now + 0.7 * mpu_6500_GX_Last);
+    mpu_6500_GY = (0.3 * mpu_6500_GY_Now + 0.7 * mpu_6500_GY_Last);
+    mpu_6500_GZ = (0.3 * mpu_6500_GZ_Now + 0.7 * mpu_6500_GZ_Last);
 
     mpu_6500_GX_Last = mpu_6500_GX;
     mpu_6500_GY_Last = mpu_6500_GY;
     mpu_6500_GZ_Last = mpu_6500_GZ;
 
-    Angle_Pitch_Gyro += mpu_6500_GX_Now / MPU_6500_LSB / UpdateFreq;
-    Angle_Roll_Gyro += mpu_6500_GY_Now / MPU_6500_LSB / UpdateFreq;
-    Angle_Pitch_Gyro += Angle_Roll_Gyro * sin((mpu_6500_GZ / UpdateFreq) * (3.14 / 180.0));
-    Angle_Roll_Gyro -= Angle_Pitch_Gyro * sin((mpu_6500_GZ / UpdateFreq) * (3.14 / 180.0));
+    Angle_Pitch_Gyro -= mpu_6500_GX / UpdateFreq;
+    Angle_Roll_Gyro -= mpu_6500_GY / UpdateFreq;
+    Angle_Yaw_Gyro -= mpu_6500_GZ / UpdateFreq;
 
+    Angle_Pitch_Gyro += Angle_Roll_Gyro * sin((mpu_6500_GZ / UpdateFreq) * pi / 180.0);
+    Angle_Roll_Gyro -= Angle_Pitch_Gyro * sin((mpu_6500_GZ / UpdateFreq) * pi / 180.0);
+
+    // std::cout << "mpu_6500_GX_Now:" << mpu_6500_GX << "\r\n";
+    //  std::cout << "Angle_Yaw_Gyro:" << Angle_Yaw_Gyro << "\r\n";
     // std::cout << "Angle_Pitch:" << Angle_Pitch_Gyro << "\r\n";
     // std::cout << "Angle_Roll:" << Angle_Roll_Gyro << "\r\n";
-    // std::cout << "GZ" << mpu_6500_GZ / MPU_6500_LSB / UpdateFreq << "\r\n";
-    
 
-    
-    mpu_6500_AX = _mpu_6500_AX;
-    mpu_6500_AY = _mpu_6500_AY;
-    mpu_6500_AZ = _mpu_6500_AZ;
+    mpu_6500_AX = (_mpu_6500_AX + 5910) - (5910 - 1817) / 2;
+    mpu_6500_AY = (_mpu_6500_AY + 2978) - (2978 + 1098) / 2;
+    mpu_6500_AZ = (_mpu_6500_AZ + 2234) - (2234 + 1905) / 2;
+
+    // std::cout << "mpu_6500_AX:" << mpu_6500_AX << "\r\n";
+    // std::cout << "mpu_6500_AY:" << mpu_6500_AY << "\r\n";
+    // std::cout << "mpu_6500_AZ:" << mpu_6500_AZ << "\r\n";
 
     Acc_Total_Vector = sqrt((mpu_6500_AX * mpu_6500_AX) + (mpu_6500_AY * mpu_6500_AY) + (mpu_6500_AZ * mpu_6500_AZ));
-    Angle_Pitch_Acc = asin((float)mpu_6500_AY / Acc_Total_Vector) * 180 / 3.14;
-    Angle_Roll_Acc = asin((float)mpu_6500_AX / Acc_Total_Vector) * 180 / 3.14 * (-1);
+    Angle_Pitch_Acc = asin((float)mpu_6500_AY / Acc_Total_Vector) * 180 / pi;
+    Angle_Roll_Acc = asin((float)mpu_6500_AX / Acc_Total_Vector) * 180 / pi * (-1);
 
+    // Angle_Pitch_Acc -= Angle_Pitch_Acc_Cali;
+    // Angle_Roll_Acc -= Angle_Roll_Acc_Cali;
+
+    // std::cout << "Acc_Total_Vector:" << Acc_Total_Vector << "\r\n";
     // std::cout << "Angle_Pitch_Acc:" << Angle_Pitch_Acc << "\r\n";
     // std::cout << "Angle_Roll_Acc:" << Angle_Roll_Acc << "\r\n";
+    //   std::cout << std::endl;
 
-    Angle_Pitch = Angle_Pitch_Gyro * 0.996 + Angle_Pitch_Acc * 0.004;
-    Angle_Roll = Angle_Roll_Gyro * 0.996 + Angle_Roll_Acc * 0.004;
+    if (set_groy_angles)
+    {
+        Angle_Roll = Angle_Roll_Gyro * 0.9996 + Angle_Roll_Acc * 0.0004;
+        Angle_Pitch = Angle_Pitch_Gyro * 0.9996 + Angle_Pitch_Acc * 0.0004;
 
-    std::cout << "Angle_Pitch:" << Angle_Pitch << "\r\n";
-    std::cout << "Angle_Roll:" << Angle_Roll << "\r\n";
+        Angle_Roll_Out = 0.7 * Angle_Roll + 0.3 * Angle_Roll_last;
+        Angle_Pitch_Out = 0.7 * Angle_Pitch + 0.3 * Angle_Pitch_last;
+        Angle_Roll_last = Angle_Roll_Out;
+        Angle_Pitch_last = Angle_Pitch_Out;
+    }
+    else
+    {
+        Angle_Roll_Gyro = Angle_Roll_Acc;
+        Angle_Pitch_Gyro = Angle_Pitch_Acc;
+        set_groy_angles = true;
+    }
+
+    if (count > 1000)
+    {
+        set_groy_angles = false;
+        count = 0;
+    }
+    count++;
+    // std::cout << "count" << count << "\r\n";
+    //  Angle_Pitch = Angle_Pitch_Gyro * 0.996 + Angle_Pitch_Acc * 0.004;
+    //  Angle_Roll = Angle_Roll_Gyro * 0.996 + Angle_Roll_Acc * 0.004;
+
+    // std::cout << "Angle_Pitch:" << Angle_Pitch << "\r\n";
+    // std::cout << "Angle_Roll:" << Angle_Roll << "\r\n";
 
     // std::cout << "mpu_6500_GX:" << mpu_6500_GX << "\r\n";
     // std::cout << "mpu_6500_GY:" << mpu_6500_GY << "\r\n";
