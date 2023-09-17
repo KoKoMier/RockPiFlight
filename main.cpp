@@ -37,8 +37,8 @@ float pid_i_sum_pitch = 0;
 float pid_output_pitch = 0;
 float pid_last_d_err_pitch = 0;
 
-int pin1 = 11;
-int pin2 = 15;
+int pin1 = 15;
+int pin2 = 13;
 int pin3 = 14;
 int pin4 = 12;
 void dataParese(std::string data, std::string *databuff, const char splti, int MaxSize)
@@ -87,12 +87,14 @@ int main(int argc, char *argv[])
         case 's':
         {
             SensorsAcorrect();
+
             while (true)
             {
+                int microstart = GetTimestamp();
                 SensorsParse();
                 //
-                std::cout << "---------------------------"
-                          << "\r\n";
+                //std::cout << "---------------------------"
+                //          << "\r\n";
                 // std::cout << "mpu_6500_GX:" << std::fixed << std::setprecision(5) << mpu_6500_GX << "\r\n";
                 // std::cout << "mpu_6500_GY:" << std::fixed << std::setprecision(5) << mpu_6500_GY << "\r\n";
                 // std::cout << "mpu_6500_GZ:" << std::fixed << std::setprecision(5) << mpu_6500_GZ << "\r\n";
@@ -102,16 +104,17 @@ int main(int argc, char *argv[])
                 //std::cout << "Angle_Roll_Out:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
                 // std::cout << "Tmp_AY:" << std::fixed << std::setprecision(2) << mpu_6500_AY
                 //         << "\r\n";
-                std::cout << "---------------------------"
-                          << "\r\n";
-                usleep(100000);
+                //std::cout << "---------------------------"
+                //          << "\r\n";
+                int microend = GetTimestamp();
+                usleep(4000 - (microend - microstart)); // 250Hz
             }
         }
         break;
 
         case 'g':
         {
-            int fd = pca9685Setup("/dev/i2c-7", 0x70, 400);
+            int fd = pca9685Setup("/dev/i2c-7", 0x40, 400);
             while (true)
             {
                 int sp;
@@ -169,7 +172,7 @@ int main(int argc, char *argv[])
             new_tio.c_lflag &= (~ICANON & ~ECHO);
             tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
-            std::thread inputThread([&input, &pwmValue]
+            std::thread inputThread([&input, &pwmValue, &fd]
                                     {
                 while (true) {
                     std::cin >> input;
@@ -179,6 +182,12 @@ int main(int argc, char *argv[])
                     for(int i=0; i<4; i++) pwmValue[i] -= 3;
                 else if (input == 'q')
                     break;
+
+                //pca9685PWMWrite(fd, pin1, 0, limitValue(pwmValue[0]));
+                pca9685PWMWrite(fd, 16, 0, limitValue(pwmValue[1]));
+                // pca9685PWMWrite(fd, pin3, 0, limitValue(pwmValue[2]));
+                // pca9685PWMWrite(fd, pin4, 0, limitValue(pwmValue[3]));
+
                 } });
 
             while (true)
@@ -198,15 +207,12 @@ int main(int argc, char *argv[])
                 pid_output_pitch = pid_p_gain_pitch * pid_pitch_error + pid_i_gain_pitch * pid_i_sum_pitch + pid_d_gain_pitch * (pid_pitch_error - pid_last_d_err_pitch);
                 pid_last_d_err_pitch = pid_pitch_error;
 
-                pca9685PWMWrite(fd, pin1, 0, limitValue(pwmValue[0]));
-                pca9685PWMWrite(fd, pin2, 0, limitValue(pwmValue[1]));
-                pca9685PWMWrite(fd, pin3, 0, limitValue(pwmValue[2]));
-                pca9685PWMWrite(fd, pin4, 0, limitValue(pwmValue[3]));
+                // std::cout << "pwm1: " << pwmValue[0] << std::endl;
 
                 // std::cout << "------------------------------------"
                 //           << "\r\n";
-                // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch << "\r\n";
-                // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << gyro_roll_input << "\r\n";
+                std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
+                std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
                 // std::cout << "------------------------------------"
                 //           << "\r\n";
                 // std::cout << "sp = " << pwmValue[0] << "\r\n";
@@ -218,7 +224,7 @@ int main(int argc, char *argv[])
 
                 int microend = GetTimestamp();
                 // std::cout << "time = " << microend - microstart << "\r\n";
-                usleep(8000- (microend - microstart));//125Hz
+                usleep(4000 - (microend - microstart)); // 250Hz
             }
             tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
         }
