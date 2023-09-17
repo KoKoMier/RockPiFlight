@@ -11,6 +11,7 @@
 #include <sys/time.h>
 #include <thread>
 #include "src/SYS/sys.hpp"
+#include "src/control/control.hpp"
 
 float pid_p_gain_roll = 0;
 float pid_i_gain_roll = 0;
@@ -77,6 +78,7 @@ int GetTimestamp()
 int main(int argc, char *argv[])
 {
     int argvs;
+
     TimestartUpLoad = GetTimestamp();
 
     while ((argvs = getopt(argc, argv, "s::g::r::c::f::R")) != -1)
@@ -86,12 +88,14 @@ int main(int argc, char *argv[])
 
         case 's':
         {
-            SensorsAcorrect();
+            CONTROL control;
+            // SensorsAcorrect();
 
             while (true)
             {
                 int microstart = GetTimestamp();
-                SensorsParse();
+                control.control();
+                // SensorsParse();
                 //
                 //std::cout << "---------------------------"
                 //          << "\r\n";
