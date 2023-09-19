@@ -38,6 +38,9 @@ float pid_i_sum_pitch = 0;
 float pid_output_pitch = 0;
 float pid_last_d_err_pitch = 0;
 
+int pwmValue[4] = {1800, 1800, 1800, 1800};
+
+
 int pin1 = 15;
 int pin2 = 13;
 int pin3 = 14;
@@ -165,9 +168,10 @@ int main(int argc, char *argv[])
         case 'c':
         {
             SensorsAcorrect();
+            
 
+            CONTROL control;
             int fd = pca9685Setup("/dev/i2c-7", 0x70, 400);
-            int pwmValue[4] = {1800, 1800, 1800, 1800};
             char input = ' ';
 
             struct termios old_tio, new_tio;
@@ -176,21 +180,51 @@ int main(int argc, char *argv[])
             new_tio.c_lflag &= (~ICANON & ~ECHO);
             tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
-            std::thread inputThread([&input, &pwmValue, &fd]
+            std::thread inputThread([&input, &control]
                                     {
+                static int throttle = 1800;
                 while (true) {
                     std::cin >> input;
                 if (input == 'w')
-                    for(int i=0; i<4; i++) pwmValue[i] += 3;
+                {
+                    throttle += 3;
+                    control.set_throttle(throttle);
+                }
                 else if (input == 's')
-                    for(int i=0; i<4; i++) pwmValue[i] -= 3;
+                {
+                    throttle -= 3;
+                    control.set_throttle(throttle);
+                }
+                else if (input == 'a')
+                {
+                    control.set_target_angle(0, 30, 0);
+                }
+                else if (input == 'd')
+                {
+                    control.set_target_angle(0, 0, 0);
+                }
                 else if (input == 'q')
-                    break;
+                {
+                    pwmValue[0] = 1800;
+                    pwmValue[1] = 1800;
+                    pwmValue[2] = 1800;
+                    pwmValue[3] = 1800;
+                    control.set_throttle(1800);
+                }
 
-                //pca9685PWMWrite(fd, pin1, 0, limitValue(pwmValue[0]));
-                pca9685PWMWrite(fd, 16, 0, limitValue(pwmValue[1]));
-                // pca9685PWMWrite(fd, pin3, 0, limitValue(pwmValue[2]));
-                // pca9685PWMWrite(fd, pin4, 0, limitValue(pwmValue[3]));
+
+                } });
+
+            std::thread inputThread2([&fd, &control]
+                                    {
+                while (true) {
+
+                // std::cout << "sp = " << pwmValue[0] << "\r\n";
+                control.control();
+                pca9685PWMWrite(fd, pin1, 0, limitValue(pwmValue[0]));
+                pca9685PWMWrite(fd, pin2, 0, limitValue(pwmValue[1]));
+                pca9685PWMWrite(fd, pin3, 0, limitValue(pwmValue[2]));
+                pca9685PWMWrite(fd, pin4, 0, limitValue(pwmValue[3]));
 
                 } });
 
@@ -198,25 +232,27 @@ int main(int argc, char *argv[])
             {
                 int microstart = GetTimestamp();
                 SensorsParse();
+                
 
-                gyro_roll_input = 0.8 * gyro_roll_input + 0.2 * Angle_Roll;
-                pid_roll_error = gyro_roll_input - pid_roll_setpoint;
-                pid_i_sum_roll += pid_i_gain_roll * pid_roll_error;
-                pid_output_roll = pid_p_gain_roll * pid_roll_error + pid_i_gain_roll * pid_i_sum_roll + pid_d_gain_roll * (pid_roll_error - pid_last_d_err);
-                pid_last_d_err = pid_roll_error;
 
-                gyro_pitch_input = 0.8 * gyro_pitch_input + 0.2 * Angle_Pitch;
-                pid_pitch_error = gyro_pitch_input - pid_pitch_setpoint;
-                pid_i_sum_pitch += pid_i_gain_pitch * pid_pitch_error;
-                pid_output_pitch = pid_p_gain_pitch * pid_pitch_error + pid_i_gain_pitch * pid_i_sum_pitch + pid_d_gain_pitch * (pid_pitch_error - pid_last_d_err_pitch);
-                pid_last_d_err_pitch = pid_pitch_error;
+                // gyro_roll_input = 0.8 * gyro_roll_input + 0.2 * Angle_Roll;
+                // pid_roll_error = gyro_roll_input - pid_roll_setpoint;
+                // pid_i_sum_roll += pid_i_gain_roll * pid_roll_error;
+                // pid_output_roll = pid_p_gain_roll * pid_roll_error + pid_i_gain_roll * pid_i_sum_roll + pid_d_gain_roll * (pid_roll_error - pid_last_d_err);
+                // pid_last_d_err = pid_roll_error;
+
+                // gyro_pitch_input = 0.8 * gyro_pitch_input + 0.2 * Angle_Pitch;
+                // pid_pitch_error = gyro_pitch_input - pid_pitch_setpoint;
+                // pid_i_sum_pitch += pid_i_gain_pitch * pid_pitch_error;
+                // pid_output_pitch = pid_p_gain_pitch * pid_pitch_error + pid_i_gain_pitch * pid_i_sum_pitch + pid_d_gain_pitch * (pid_pitch_error - pid_last_d_err_pitch);
+                // pid_last_d_err_pitch = pid_pitch_error;
 
                 // std::cout << "pwm1: " << pwmValue[0] << std::endl;
 
                 // std::cout << "------------------------------------"
                 //           << "\r\n";
-                std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
-                std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
+                // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
+                // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
                 // std::cout << "------------------------------------"
                 //           << "\r\n";
                 // std::cout << "sp = " << pwmValue[0] << "\r\n";
