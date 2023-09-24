@@ -28,6 +28,7 @@ typedef struct
 
 	double max_out; 
 	double max_iout;
+	double dead_zone;
 
 	double measure;
 	double target;
@@ -55,7 +56,7 @@ void pid_clear(PidTypeDef *pid);
   * @return    None
   * @note      None
   */
-void pid_init(PidTypeDef *pid, PID_MODE mode, const double Kp, const double Ki, const double Kd, const double max_iout, const double max_out)
+void pid_init(PidTypeDef *pid, PID_MODE mode, const double Kp, const double Ki, const double Kd, const double max_iout, const double max_out, const double dead_zone)
 {
 	pid->mode = mode;
 
@@ -65,10 +66,11 @@ void pid_init(PidTypeDef *pid, PID_MODE mode, const double Kp, const double Ki, 
 	
 	pid->max_iout = max_iout;
 	pid->max_out = max_out;
+	pid->dead_zone = dead_zone;
 	
 	pid->measure = 0.0f;
 	pid->target = 0.0f;
-	
+
 	pid->Pout = 0.0f;
 	pid->Iout = 0.0f;
 	pid->Dout = 0.0f;
@@ -101,10 +103,18 @@ double pid_control(PidTypeDef * pid, double target, double measure)
 	pid->measure = measure;
 	pid->target = target;
 	pid->error[0] = target - measure;
+	if((pid->error[0] < pid->dead_zone) && (pid->error[0] > -pid->dead_zone))
+	{
+		pid->error[0] = 0;
+	}
 	if (pid->mode == POSITION_MODE)
 	{
 		pid->Pout = pid->Kp * pid->error[0];
 		pid->Iout += pid->Ki * pid->error[0];
+		if((pid->Iout > pid->max_iout) && (pid->Iout < -pid->max_iout))
+		{
+			pid->Iout = 0;
+		}
 		pid->Dbuf[2] = pid->Dbuf[1];
 		pid->Dbuf[1] = pid->Dbuf[0];
 		pid->Dbuf[0] = (pid->error[0] - pid->error[1]);
@@ -117,6 +127,10 @@ double pid_control(PidTypeDef * pid, double target, double measure)
 	{
 		pid->Pout = pid->Kp * (pid->error[0] - pid->error[1]);
 		pid->Iout = pid->Ki * pid->error[0];
+		if((pid->Iout > pid->max_iout) && (pid->Iout < -pid->max_iout))
+		{
+			pid->Iout = 0;
+		}
 		pid->Dbuf[2] = pid->Dbuf[1];
 		pid->Dbuf[1] = pid->Dbuf[0];
 		pid->Dbuf[0] = (pid->error[0] - 2.0f * pid->error[1] + pid->error[2]);

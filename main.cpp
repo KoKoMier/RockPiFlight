@@ -7,11 +7,12 @@
 #include <cmath>
 #include "src/PAC9685/pac.hpp"
 #include "src/UART/CRSFProtocol.hpp"
-#include "src/UART/uart.hpp"
+#include "src/UART/CRSFUartRC.hpp"
 #include <sys/time.h>
 #include <thread>
 #include "src/SYS/sys.hpp"
 #include "src/control/control.hpp"
+
 
 float pid_p_gain_roll = 0;
 float pid_i_gain_roll = 0;
@@ -39,12 +40,14 @@ float pid_output_pitch = 0;
 float pid_last_d_err_pitch = 0;
 
 int pwmValue[4] = {1800, 1800, 1800, 1800};
-
+uint8_t imu_get_data_flag = 0;
+int imu_no_get_data_count = 0;
 
 int pin1 = 15;
 int pin2 = 13;
 int pin3 = 14;
 int pin4 = 12;
+
 void dataParese(std::string data, std::string *databuff, const char splti, int MaxSize)
 {
     std::istringstream f(data);
@@ -92,13 +95,13 @@ int main(int argc, char *argv[])
         case 's':
         {
             CONTROL control;
-            // SensorsAcorrect();
+            SensorsAcorrect();
 
             while (true)
             {
                 int microstart = GetTimestamp();
-                control.control();
-                // SensorsParse();
+                //control.control();
+                SensorsParse();
                 //
                 //std::cout << "---------------------------"
                 //          << "\r\n";
@@ -114,8 +117,84 @@ int main(int argc, char *argv[])
                 //std::cout << "---------------------------"
                 //          << "\r\n";
                 int microend = GetTimestamp();
-                usleep(4000 - (microend - microstart)); // 250Hz
+                if(microend - microstart < 4000)
+                {
+                    usleep(4000 - (microend - microstart)); // 250Hz
+                }
             }
+        }
+        break;
+
+        case 'f':
+        {
+            while (true)
+            {
+                FILE *file = fopen("../data/example.txt", "w");
+                if (file == NULL) {
+                    printf("无法打开文件\n");
+                    return 1;
+                }
+
+                for (int i = 1; i <= 6; i++) {
+                    int sp;
+                    switch (i)
+                    {
+                        case 1:
+                            {
+                                std::cout<<"请将无人机放平"<<"\r\n";
+                                std::cin >> sp;
+                                SensorsAcorrect();
+                                std::cout<<"_mpu_6500_AZ_Cali:"<<_mpu_6500_AZ_Cali<<"\r\n";
+                                fprintf(file, "Orthogonal data:%f\n", _mpu_6500_AZ_Cali);
+                            } break;
+                        case 2:
+                            {
+                                std::cout<<"请将无人机倒放"<<"\r\n";
+                                std::cin >> sp;
+                                SensorsAcorrect();
+                                std::cout<<"_mpu_6500_AZ_Cali:"<<_mpu_6500_AZ_Cali<<"\r\n";
+                                fprintf(file, "Inverted data:%f\n", _mpu_6500_AZ_Cali);
+                            } break;
+                        case 3:
+                            {
+                                std::cout<<"请将无人机左侧放"<<"\r\n";
+                                std::cin >> sp;
+                                SensorsAcorrect();
+                                std::cout<<"_mpu_6500_AX_Cali:"<<_mpu_6500_AX_Cali<<"\r\n";                                
+                                fprintf(file, "Left data:%f\n", _mpu_6500_AX_Cali);
+                            } break;
+                        case 4:
+                            {
+                                std::cout<<"请将无人机右侧放"<<"\r\n";
+                                std::cin >> sp;
+                                SensorsAcorrect();
+                                std::cout<<"_mpu_6500_AX_Cali:"<<_mpu_6500_AX_Cali<<"\r\n";   
+                                fprintf(file, "Right data:%f\n", _mpu_6500_AX_Cali);
+                            } break;
+                        case 5:
+                            {
+                                std::cout<<"请将无人机前侧放"<<"\r\n";
+                                std::cin >> sp;
+                                SensorsAcorrect();
+                                std::cout<<"_mpu_6500_AX_Cali:"<<_mpu_6500_AY_Cali<<"\r\n";   
+                                fprintf(file, "Front data:%f\n", _mpu_6500_AY_Cali);
+                            } break;
+                        case 6:
+                            {
+                                std::cout<<"请将无人机后侧放"<<"\r\n";
+                                std::cin >> sp;
+                                SensorsAcorrect();
+                                std::cout<<"_mpu_6500_AX_Cali:"<<_mpu_6500_AY_Cali<<"\r\n";   
+                                fprintf(file, "Back  data:%f\n", _mpu_6500_AY_Cali);
+                            } break;
+                    }
+                }
+                std::cout<<"初始化完毕"<<"\r\n";
+                fclose(file);
+
+                return 0;
+            }
+
         }
         break;
 
@@ -135,7 +214,7 @@ int main(int argc, char *argv[])
         {
             long int time;
             long int timee;
-            CRSF test(optarg);
+            CRSF test;
             int channelData[50];
 
             while (true)
@@ -183,6 +262,8 @@ int main(int argc, char *argv[])
             std::thread inputThread([&input, &control]
                                     {
                 static int throttle = 1800;
+                static double roll_target_angle = 0.65;
+
                 while (true) {
                     std::cin >> input;
                 if (input == 'w')
@@ -197,11 +278,13 @@ int main(int argc, char *argv[])
                 }
                 else if (input == 'a')
                 {
-                    control.set_target_angle(0, 30, 0);
+                    roll_target_angle += 0.05;
+                    control.set_target_angle(-2.0, roll_target_angle, 0);
                 }
                 else if (input == 'd')
                 {
-                    control.set_target_angle(0, 0, 0);
+                    roll_target_angle -= 0.05;
+                    control.set_target_angle(-2.0, roll_target_angle, 0);
                 }
                 else if (input == 'q')
                 {
@@ -217,23 +300,21 @@ int main(int argc, char *argv[])
 
             std::thread inputThread2([&fd, &control]
                                     {
-                while (true) {
-
-                // std::cout << "sp = " << pwmValue[0] << "\r\n";
-                control.control();
-                pca9685PWMWrite(fd, pin1, 0, limitValue(pwmValue[0]));
-                pca9685PWMWrite(fd, pin2, 0, limitValue(pwmValue[1]));
-                pca9685PWMWrite(fd, pin3, 0, limitValue(pwmValue[2]));
-                pca9685PWMWrite(fd, pin4, 0, limitValue(pwmValue[3]));
-
+                while (true){
+                    int microstart = GetTimestamp();
+                    control.control();
+                    pca9685PWMWriteS(fd, pin1, limitValue(pwmValue[0]));
+                    pca9685PWMWriteS(fd, pin2, limitValue(pwmValue[1]));
+                    pca9685PWMWriteS(fd, pin3, limitValue(pwmValue[2]));
+                    pca9685PWMWriteS(fd, pin4, limitValue(pwmValue[3]));
+                     int microend = GetTimestamp();
+                std::cout << "time = " << microend - microstart << "\r\n";
                 } });
 
             while (true)
             {
                 int microstart = GetTimestamp();
                 SensorsParse();
-                
-
 
                 // gyro_roll_input = 0.8 * gyro_roll_input + 0.2 * Angle_Roll;
                 // pid_roll_error = gyro_roll_input - pid_roll_setpoint;
@@ -251,8 +332,8 @@ int main(int argc, char *argv[])
 
                 // std::cout << "------------------------------------"
                 //           << "\r\n";
-                // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
-                // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
+                // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
+                // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
                 // std::cout << "------------------------------------"
                 //           << "\r\n";
                 // std::cout << "sp = " << pwmValue[0] << "\r\n";
@@ -260,11 +341,14 @@ int main(int argc, char *argv[])
                 // std::cout << "sp = " << pwmValue[2] << "\r\n";
                 // std::cout << "sp = " << pwmValue[3] << "\r\n";
                 // std::cout << "------------------------------------"
-                //           << "\r\n";
+                        //   << "\r\n";
 
                 int microend = GetTimestamp();
                 // std::cout << "time = " << microend - microstart << "\r\n";
-                usleep(4000 - (microend - microstart)); // 250Hz
+                if(microend - microstart < 4000)
+                {
+                    usleep(4000 - (microend - microstart)); // 250Hz
+                }
             }
             tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
         }
