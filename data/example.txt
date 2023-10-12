@@ -1,6 +1,6 @@
-Orthogonal data:-2263.972900
-Inverted data:1878.327026
-Left data:-1715.490112
-Right data:-5813.550781
-Front data:-2963.717041
-Back  data:1149.552612
+Orthogonal data:-5019.997559
+Inverted data:-837.916504
+Left data:-9074.034180
+Right data:-4953.646973
+Front data:-10123.761719
+Back  data:-6004.449219

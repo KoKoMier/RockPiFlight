@@ -1,5 +1,7 @@
+#ifndef MPU6500_H
+#define MPU6500_H
 #include <iostream>
-#include "../spi/LinuxSPI.hpp"
+#include "../SPI/LinuxSPI.hpp"
 #include <chrono>
 #include <unistd.h>
 #include <iomanip>
@@ -17,7 +19,10 @@ int _mpu_6500_AX;
 int _mpu_6500_AY;
 int _mpu_6500_AZ;
 
-float _mpu_6500_AZ_err_up  = 0;
+float Angle_Roll_Gyro_ = 0;
+float Angle_Pitch_Gyro_ = 0;
+
+float _mpu_6500_AZ_err_up = 0;
 float _mpu_6500_AZ_err_down = 0;
 float _mpu_6500_AX_err_up = 0;
 float _mpu_6500_AX_err_down = 0;
@@ -73,12 +78,18 @@ float Angle_Pitch_last = 0;
 
 float MPU6500_SPI_Freq = 400000;
 //
-int fd = _s_spiOpen("/dev/spidev2.0", MPU6500_SPI_Freq, 0);
+float Angle_Pitch_Gyro_last = 0;
+float Angle_Roll_Gyro_last = 0;
+float Angle_Yaw_Gyro_last = 0;
+
+int fd = _s_spiOpen("/dev/spidev0.0", MPU6500_SPI_Freq, 0);
 int count = 0;
 
 void read_mpu_6500_data()
 {
     uint8_t Tmp_MPU6500_SPI_BufferX[8] = {0};
+    
+
     //
     Tmp_MPU6500_SPI_BufferX[0] = 0xBA;
     _s_spiXfer(fd, Tmp_MPU6500_SPI_BufferX, Tmp_MPU6500_SPI_BufferX, MPU6500_SPI_Freq, 8);
@@ -88,6 +99,7 @@ void read_mpu_6500_data()
     _mpu_6500_AX = Tmp_AX;
     _mpu_6500_AY = Tmp_AY;
     _mpu_6500_AZ = Tmp_AZ;
+    // std::cout << "_mpu_6500_AX:" << _mpu_6500_AX << "\r\n";
 
     Tmp_MPU6500_SPI_BufferX[0] = 0xC3;
     _s_spiXfer(fd, Tmp_MPU6500_SPI_BufferX, Tmp_MPU6500_SPI_BufferX, MPU6500_SPI_Freq, 8);
@@ -134,25 +146,29 @@ void SensorsAcorrect()
     _s_spiWrite(fd, MPU6500_SPI_Config_INTE, MPU6500_SPI_Freq, 2);
     usleep(500);
 
-    std::ifstream file("../data/example.txt");
-    if (!file) {
-        std::cout << "无法打开文件喵\n";
-        return ;
+    std::ifstream file("./data/example.txt");
+    if (!file)
+    {
+        std::cout << "无法打开文件\n";
+        return;
     }
 
     float error[6];
     std::string line;
-    for(int i = 0; i < 6; i++) {
-    if(std::getline(file, line)) {
-    std::size_t pos = line.find(":");
-    if(pos != std::string::npos) {
-    std::string value_str = line.substr(pos + 1);
-    double value = std::stod(value_str);
-    error[i] = value;
+    for (int i = 0; i < 6; i++)
+    {
+        if (std::getline(file, line))
+        {
+            std::size_t pos = line.find(":");
+            if (pos != std::string::npos)
+            {
+                std::string value_str = line.substr(pos + 1);
+                double value = std::stod(value_str);
+                error[i] = value;
+            }
+        }
     }
-    }
-    }
-    
+
     file.close();
     _mpu_6500_AZ_err_up = error[0];
     _mpu_6500_AZ_err_down = error[1];
@@ -203,7 +219,6 @@ void SensorsParse()
     mpu_6500_GY_Now = (_mpu_6500_GY - _mpu_6500_GY_Cali) / MPU_6500_LSB;
     mpu_6500_GZ_Now = (_mpu_6500_GZ - _mpu_6500_GZ_Cali) / MPU_6500_LSB;
 
-    // std::cout << "GZ" << mpu_6500_GZ / MPU_6500_LSB / UpdateFreq << "\r\n";
     // 滤波得到角速度
     mpu_6500_GX = (0.3 * mpu_6500_GX_Now + 0.7 * mpu_6500_GX_Last);
     mpu_6500_GY = (0.3 * mpu_6500_GY_Now + 0.7 * mpu_6500_GY_Last);
@@ -212,10 +227,27 @@ void SensorsParse()
     mpu_6500_GX_Last = mpu_6500_GX;
     mpu_6500_GY_Last = mpu_6500_GY;
     mpu_6500_GZ_Last = mpu_6500_GZ;
+    // std::cout << "GZ" << mpu_6500_GX << "\r\n";
 
-    Angle_Pitch_Gyro -= mpu_6500_GX / UpdateFreq;
-    Angle_Roll_Gyro -= mpu_6500_GY / UpdateFreq;
-    Angle_Yaw_Gyro -= mpu_6500_GZ / UpdateFreq;
+    Angle_Pitch_Gyro += mpu_6500_GX / UpdateFreq;
+    Angle_Roll_Gyro += mpu_6500_GY / UpdateFreq;
+    Angle_Yaw_Gyro += mpu_6500_GZ / UpdateFreq;
+
+    if (std::isnan(Angle_Pitch_Gyro))
+    {
+        Angle_Pitch_Gyro = Angle_Pitch_Gyro_last;
+    }
+    if (std::isnan(Angle_Roll_Gyro))
+    {
+        Angle_Roll_Gyro = Angle_Roll_Gyro_last;
+    }
+
+    Angle_Pitch_Gyro_last = Angle_Pitch_Gyro;
+    Angle_Roll_Gyro_last = Angle_Roll_Gyro;
+    Angle_Yaw_Gyro_last = Angle_Yaw_Gyro;
+    //  std::cout << "Angle_Yaw_Gyro:" << Angle_Yaw_Gyro << "\r\n";
+    // std::cout << "Angle_Pitch:" << Angle_Pitch_Gyro << "\r\n";
+    // std::cout << "Angle_Roll:" << Angle_Roll_Gyro << "\r\n";
 
     Angle_Pitch_Gyro += Angle_Roll_Gyro * sin((mpu_6500_GZ / UpdateFreq) * pi / 180.0);
     Angle_Roll_Gyro -= Angle_Pitch_Gyro * sin((mpu_6500_GZ / UpdateFreq) * pi / 180.0);
@@ -225,14 +257,21 @@ void SensorsParse()
     // std::cout << "Angle_Pitch:" << Angle_Pitch_Gyro << "\r\n";
     // std::cout << "Angle_Roll:" << Angle_Roll_Gyro << "\r\n";
 
-    mpu_6500_AX = (_mpu_6500_AX - _mpu_6500_AX_err_up) - (_mpu_6500_AX_err_down - _mpu_6500_AX_err_up) / 2;
-    mpu_6500_AY = (_mpu_6500_AY - _mpu_6500_AY_err_up) - (_mpu_6500_AY_err_down - _mpu_6500_AY_err_up) / 2;
-    mpu_6500_AZ = (_mpu_6500_AZ - _mpu_6500_AZ_err_up) - (_mpu_6500_AZ_err_down - _mpu_6500_AZ_err_up) / 2;
-
     // std::cout << "_mpu_6500_AX:" << mpu_6500_AX << "\r\n";
     // std::cout << "_mpu_6500_AY:" << mpu_6500_AY << "\r\n";
     // std::cout << "_mpu_6500_AZ:" << mpu_6500_AZ << "\r\n";
 
+    mpu_6500_AX = (_mpu_6500_AX - _mpu_6500_AX_err_up) - (_mpu_6500_AX_err_down - _mpu_6500_AX_err_up) / 2;
+    mpu_6500_AY = (_mpu_6500_AY - _mpu_6500_AY_err_up) - (_mpu_6500_AY_err_down - _mpu_6500_AY_err_up) / 2;
+    mpu_6500_AZ = (_mpu_6500_AZ - _mpu_6500_AZ_err_up) - (_mpu_6500_AZ_err_down - _mpu_6500_AZ_err_up) / 2;
+
+    // std::cout << "_mpu_6500_AX:" << (_mpu_6500_AX + 7030) / 2000.0 << "\r\n";
+    // std::cout << "_mpu_6500_AY:" << _mpu_6500_AY << "\r\n";
+    //  std::cout << "_mpu_6500_AZ:" << _mpu_6500_AZ + 32768 << "\r\n";
+    // _mpu_6500_AX = _mpu_6500_AX > -7000.0 ? -7000.0 : (_mpu_6500_AX < -9000.0 ? -9000.0 : _mpu_6500_AX);
+    // _mpu_6500_AY = _mpu_6500_AY > -6000.0 ? -6000.0 : (_mpu_6500_AY < -10000.0 ? -10000.0 : _mpu_6500_AY);
+    // Angle_Roll_Acc = -asin((_mpu_6500_AX + 7030) / 2000.0) * 180.0 / pi;
+    // Angle_Pitch_Acc = asin((_mpu_6500_AY + 8038) / 2000.0) * 180.0 / pi;
     Acc_Total_Vector = sqrt((mpu_6500_AX * mpu_6500_AX) + (mpu_6500_AY * mpu_6500_AY) + (mpu_6500_AZ * mpu_6500_AZ));
     Angle_Pitch_Acc = asin((float)mpu_6500_AY / Acc_Total_Vector) * 180 / pi;
     Angle_Roll_Acc = asin((float)mpu_6500_AX / Acc_Total_Vector) * 180 / pi * (-1);
@@ -241,23 +280,36 @@ void SensorsParse()
     // Angle_Roll_Acc -= Angle_Roll_Acc_Cali;
 
     // std::cout << "Acc_Total_Vector:" << Acc_Total_Vector << "\r\n";
-    // std::cout << "Angle_Pitch_Acc:" << Angle_Pitch_Acc << "\r\n";
-    // std::cout << "Angle_Roll_Acc:" << Angle_Roll_Acc << "\r\n";
+    // std::cout << "Angle_Pitch_Acc:" << Angle_Roll_Acc << "\r\n";
+    // std::cout << "Angle_Roll_Acc:" << Angle_Pitch_Acc << "\r\n";
     //   std::cout << std::endl;
 
     if (set_groy_angles)
     {
-        Angle_Roll_Gyro = Angle_Roll_Gyro * 0.9996 + Angle_Roll_Acc * 0.0004;
-        Angle_Pitch_Gyro = Angle_Pitch_Gyro * 0.9996 + Angle_Pitch_Acc * 0.0004;
+
+        // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(5) << Angle_Pitch_Gyro << "\r\n";
+        // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(5) << Angle_Roll_Gyro << "\r\n";
+
+        Angle_Roll_Gyro = Angle_Roll_Gyro * 0.999 + Angle_Roll_Acc * 0.001;
+        Angle_Pitch_Gyro = Angle_Pitch_Gyro * 0.999 + Angle_Pitch_Acc * 0.001;
 
         Angle_Roll_Out = 0.7 * Angle_Roll_Gyro + 0.3 * Angle_Roll_last;
         Angle_Pitch_Out = 0.7 * Angle_Pitch_Gyro + 0.3 * Angle_Pitch_last;
 
-        // std::cout << "Angle_Pitch_Acc:" << std::fixed << std::setprecision(1) << Angle_Pitch_Acc << "\r\n";
-        // std::cout << "Angle_Roll_Acc:" << std::fixed << std::setprecision(1) << Angle_Roll_Acc << "\r\n";
+        if (std::isnan(Angle_Pitch_Out))
+        {
+            Angle_Pitch_Out = Angle_Pitch_last;
+        }
+        if (std::isnan(Angle_Roll_Out))
+        {
+            Angle_Roll_Out = Angle_Roll_last;
+        }
 
-        // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
-        // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
+        // std::cout << "Angle_Roll_Out:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
+        // std::cout << "Angle_Pitch_Out:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
+
+        // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Pitch_Gyro << "\r\n";
+        // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Roll_Gyro << "\r\n";
 
         Angle_Roll_last = Angle_Roll_Out;
         Angle_Pitch_last = Angle_Pitch_Out;
@@ -327,3 +379,5 @@ void SensorsParse()
     //     set_groy_angles = true;
     // }
 }
+
+#endif
