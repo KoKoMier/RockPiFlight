@@ -35,10 +35,10 @@ float pid_last_d_err = 0;
 
 int pwmValue[4] = {1800, 1800, 1800, 1800};
 
-int pin1 = 13;
-int pin2 = 15;
-int pin3 = 14;
-int pin4 = 12;
+int pin1 = 12;
+int pin2 = 11;
+int pin3 = 13;
+int pin4 = 15;
 int Servos1 = 0;
 int Servos2 = 1;
 int Servos3 = 2;
@@ -62,21 +62,18 @@ void dataParese(std::string data, std::string *databuff, const char splti, int M
 
 float limitValue(float value)
 {
-    if (value > 2000)
+    if (value > 3122)
     {
-        return 2000;
+        return 3122;
+    }
+    else if (value < 1800)
+    {
+        return 1800;
     }
     else
     {
         return value;
     }
-}
-
-int GetTimestamp()
-{
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    return ((tv.tv_sec * (uint64_t)1000000 + tv.tv_usec));
 }
 
 int main(int argc, char *argv[])
@@ -216,7 +213,7 @@ int main(int argc, char *argv[])
             {
                 int sp;
                 std::cin >> sp;
-                pca9685PWMWrite(fd, 16, 0, sp);
+                pca9685PWMWrite(fd, 11, 0, sp);
                 std::cout << sp << std::endl;
             }
 
@@ -276,7 +273,11 @@ int main(int argc, char *argv[])
         case 'c':
         {
             SensorsAcorrect();
-
+            pca9685PWMWriteS(fd, pin1, 1800);
+            pca9685PWMWriteS(fd, pin2, 1800);
+            pca9685PWMWriteS(fd, pin3, 1800);
+            pca9685PWMWriteS(fd, pin4, 1800);
+            usleep(50000);
             int channelData[50];
 
             int fd = pca9685Setup("/dev/i2c-7", 0x70, 400);
@@ -292,49 +293,28 @@ int main(int argc, char *argv[])
             new_tio.c_lflag &= (~ICANON & ~ECHO);
             tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
-            std::thread inputThread([&fd]
+            int mode = 0;
+
+            std::thread inputThread([&channelData]
                                     {
-                while (true){
-                    int microstart = GetTimestamp();
-                    control.control();
-                    
-                    // pca9685PWMWriteS(fd, pin1, limitValue(pwmValue[0]));
-                    // pca9685PWMWriteS(fd, pin2, limitValue(pwmValue[1]));
-                    // pca9685PWMWriteS(fd, pin3, limitValue(pwmValue[2]));
-                    // pca9685PWMWriteS(fd, pin4, limitValue(pwmValue[3]));
-
-                    std::cout << "pwmValue = " << pwmValue[0] << "\r\n";
-                    std::cout << "pwmValue = " << pwmValue[1] << "\r\n";
-                    std::cout << "pwmValue = " << pwmValue[2] << "\r\n";
-                    std::cout << "pwmValue = " << pwmValue[3] << "\r\n";
-                    int microend = GetTimestamp();
-                    if(microend - microstart < 5000)
-                    {
-                        usleep(5000 - (microend - microstart)); // 200Hz
-                    }
-                // std::cout << "time = " << microend - microstart << "\r\n";
-                } });
-
-            std::thread inputThread1([&channelData]
-                                     {
                 while (true){
                     int microstart = GetTimestamp();
                     int retValue = test.CRSFRead(channelData);
                     if (retValue > 0)
                     {
-                        crsf.original_throttle = test.rcToUs(channelData[1]) - 1117;
-                        crsf.original_yaw = test.rcToUs(channelData[0]);
-                        crsf.original_pitch = test.rcToUs(channelData[2]) - 1628;
-                        crsf.original_roll = test.rcToUs(channelData[3]);
+                        crsf.original_throttle = test.rcToUs(channelData[1]) - 989;
+                        crsf.original_yaw = test.rcToUs(channelData[0]) - 1502;
+                        crsf.original_pitch = test.rcToUs(channelData[2]) - 1500;
+                        crsf.original_roll = test.rcToUs(channelData[3]) - 1497;
                         crsf.original_key1 = test.rcToUs(channelData[6]);
                         crsf.original_key2 = test.rcToUs(channelData[4]);
                         crsf.original_key3 = test.rcToUs(channelData[5]);
                         crsf.original_key4 = test.rcToUs(channelData[7]);
 
-                        // std::cout << "1" << test.rcToUs(channelData[0]) << "\r\n"; // yaw 1093-2012
-                        // std::cout << "2" << test.rcToUs(channelData[1]) << "\r\n"; // up 1117-2012
-                        // std::cout << "3" << test.rcToUs(channelData[2]) << "\r\n"; // pitch 1117-2012
-                        // std::cout << "4" << test.rcToUs(channelData[3]) << "\r\n"; // roll 989-1462
+                        // std::cout << "1" << test.rcToUs(channelData[0]) << "\r\n"; // yaw 990-2012  1502
+                        // std::cout << "2" << test.rcToUs(channelData[1]) << "\r\n"; // up 989-2008
+                        // std::cout << "3" << test.rcToUs(channelData[2]) << "\r\n"; // pitch 989-2012 1500
+                        // std::cout << "4" << test.rcToUs(channelData[3]) << "\r\n"; // roll 989-2008 1497
                         // std::cout << "5" << test.rcToUs(channelData[4]) << "\r\n"; // key[1] 1000 2000
                         // std::cout << "6" << test.rcToUs(channelData[5]) << "\r\n"; // key2[0] 1000 1503 2000
                         // std::cout << "7" << test.rcToUs(channelData[6]) << "\r\n"; // key[0] 1000 2000
@@ -347,18 +327,44 @@ int main(int argc, char *argv[])
                         //         << "\n";
                     }
                     int microend = GetTimestamp();
-                    if(microend - microstart < 5000)
+                    if(microend - microstart < 4000)
                     {
-                        usleep(5000 - (microend - microstart)); // 200Hz
+                        usleep(4000 - (microend - microstart)); // 250Hz
                     }
-                //std::cout << "time = " << microend - microstart << "\r\n";
+                // std::cout << "time = " << microend - microstart << "\r\n";
                 } });
 
             while (true)
             {
                 int microstart = GetTimestamp();
-
                 SensorsParse();
+                control.control();
+
+                if (test.rcToUs(channelData[5]) == 2000)
+                    mode = 1;
+                if (test.rcToUs(channelData[5]) == 1000)
+                    mode = 0;
+
+                if (mode == 1)
+                {
+                    pca9685PWMWriteS(fd, pin1, limitValue(pwmValue[0]));
+                    pca9685PWMWriteS(fd, pin2, limitValue(pwmValue[1]));
+                    pca9685PWMWriteS(fd, pin3, limitValue(pwmValue[2]));
+                    pca9685PWMWriteS(fd, pin4, limitValue(pwmValue[3]));
+                }
+                if (mode == 0)
+                {
+                    pca9685PWMWriteS(fd, pin1, 1800);
+                    pca9685PWMWriteS(fd, pin2, 1800);
+                    pca9685PWMWriteS(fd, pin3, 1800);
+                    pca9685PWMWriteS(fd, pin4, 1800);
+                }
+                // std::cout << "mode = " << mode << "\r\n";
+
+                // std::cout << "pwmValue = " << pwmValue[0] << "\r\n";
+                // std::cout << "pwmValue = " << pwmValue[1] << "\r\n";
+                // std::cout << "pwmValue = " << pwmValue[2] << "\r\n";
+                // std::cout << "pwmValue = " << pwmValue[3] << "\r\n";
 
                 // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
                 // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
@@ -370,7 +376,7 @@ int main(int argc, char *argv[])
                 {
                     usleep(4000 - (microend - microstart)); // 250Hz
                 }
-                // std::cout << "time = " << microend - microstart << "\r\n";
+                // std::cout << "time = " << microend - TF._Tmp_IMUAttThreadLast << "\r\n";
             }
             tcsetattr(STDIN_FILENO, TCSANOW, &old_tio);
         }
