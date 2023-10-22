@@ -214,7 +214,7 @@ void SensorsParse()
 {
     read_mpu_6500_data();
 
-    mpu_6500_GX_Now = (_mpu_6500_GX - _mpu_6500_GX_Cali) / MPU_6500_LSB;
+    mpu_6500_GX_Now = (_mpu_6500_GX - _mpu_6500_GX_Cali) /MPU_6500_LSB;
     mpu_6500_GY_Now = (_mpu_6500_GY - _mpu_6500_GY_Cali) / MPU_6500_LSB;
     mpu_6500_GZ_Now = (_mpu_6500_GZ - _mpu_6500_GZ_Cali) / MPU_6500_LSB;
 
@@ -250,8 +250,8 @@ void SensorsParse()
     // std::cout << "Angle_Pitch:" << Angle_Pitch_Gyro << "\r\n";
     // std::cout << "Angle_Roll:" << Angle_Roll_Gyro << "\r\n";
 
-    Angle_Pitch_Gyro += Angle_Pitch_Gyro * sin((mpu_6500_GZ / TF.UpdateFreq) * pi / 180.0);
-    Angle_Roll_Gyro -= Angle_Roll_Gyro * sin((mpu_6500_GZ / TF.UpdateFreq) * pi / 180.0);
+    Angle_Pitch_Gyro += Angle_Roll_Gyro * sin((mpu_6500_GZ / TF.UpdateFreq) * pi / 180.0);
+    Angle_Roll_Gyro -= Angle_Pitch_Gyro * sin((mpu_6500_GZ / TF.UpdateFreq) * pi / 180.0);
 
     // std::cout << "mpu_6500_GX_Now:" << mpu_6500_GX << "\r\n";
     //  std::cout << "Angle_Yaw_Gyro:" << Angle_Yaw_Gyro << "\r\n";
@@ -291,11 +291,11 @@ void SensorsParse()
         // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(5) << Angle_Pitch_Gyro << "\r\n";
         // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(5) << Angle_Roll_Gyro << "\r\n";
 
-        Angle_Roll_Gyro = Angle_Roll_Gyro * 0.9996 + Angle_Roll_Acc * 0.0004;
-        Angle_Pitch_Gyro = Angle_Pitch_Gyro * 0.9996 + Angle_Pitch_Acc * 0.0004;
+        Angle_Roll_Gyro = Angle_Roll_Gyro * 0.999 + Angle_Roll_Acc * 0.001;
+        Angle_Pitch_Gyro = Angle_Pitch_Gyro * 0.999 + Angle_Pitch_Acc * 0.001;
 
-        Angle_Roll_Out = 0.75 * Angle_Roll_Gyro + 0.25 * Angle_Roll_last;
-        Angle_Pitch_Out = 0.75 * Angle_Pitch_Gyro + 0.25 * Angle_Pitch_last;
+        Angle_Roll_Out = 0.85 * Angle_Roll_Gyro + 0.15 * Angle_Roll_last;
+        Angle_Pitch_Out = 0.85 * Angle_Pitch_Gyro + 0.15 * Angle_Pitch_last;
 
         if (std::isnan(Angle_Pitch_Out))
         {

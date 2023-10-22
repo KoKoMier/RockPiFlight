@@ -51,7 +51,7 @@ void CONTROL::data_update()
     angle_roll = Angle_Roll_Out;
     angle_yaw = Angle_Yaw_Gyro;
 
-    PF._uORB_PID_GYaw_Output = -mpu_6500_GZ;
+    PF._uORB_PID_GYaw_Output = -int(mpu_6500_GZ);
 
     gyro_pitch = mpu_6500_GX_Now;
     gyro_roll = mpu_6500_GY_Now;
@@ -72,23 +72,23 @@ void CONTROL::data_update()
     PF._flag_PID_I__Pitch_Gain = 0;
     PF._flag_PID_I__Pitch_Max__Value = 2400;
 
-    PF._uORB_PID_AngleRate_Pitch = angle_pitch;
-    PF._flag_PID_RCAngle__Pitch_Gain = 1.0;
-    PF._flag_PID_AngleRate_Pitch_Gain = 5.f;
-    PF._flag_PID_P__Pitch_Gain = 0.5;
-    PF._flag_PID_D__Pitch_Gain = 72.0;
+    PF._uORB_PID_AngleRate_Pitch = angle_pitch - 1;
+    PF._flag_PID_RCAngle__Pitch_Gain = 0.8;
+    PF._flag_PID_AngleRate_Pitch_Gain = 10.f;
+    PF._flag_PID_P__Pitch_Gain = 0.85;
+    PF._flag_PID_D__Pitch_Gain = 67.0;
 
-    PF._uORB_PID_AngleRate_Roll = angle_roll;
-    PF._flag_PID_RCAngle__Roll_Gain = 1.0;
-    PF._flag_PID_AngleRate_Roll_Gain = 5.f;
-    PF._flag_PID_P__Roll_Gain = 0.35;
-    PF._flag_PID_D__Roll_Gain = 72.0;
+    PF._uORB_PID_AngleRate_Roll = angle_roll + 0.6;
+    PF._flag_PID_RCAngle__Roll_Gain = 0.8;
+    PF._flag_PID_AngleRate_Roll_Gain = 10.f;
+    PF._flag_PID_P__Roll_Gain = 0.8;
+    PF._flag_PID_D__Roll_Gain = 52.0;
 
     PF._flag_PID_AngleRate___Yaw_Gain = 5;
     PF._flag_PID_RCAngle__Yaw_Gain = 1.f;
-    PF._flag_PID_P___Yaw_Gain = 5;
+    PF._flag_PID_P___Yaw_Gain = 2.6;
     PF._flag_PID_I___Yaw_Gain = 0;
-    PF._flag_PID_D___Yaw_Gain = 40;
+    PF._flag_PID_D___Yaw_Gain = 50;
 
     PF._uORB_RC_Out_Roll = crsf.original_roll;
     PF._uORB_RC_Out_Pitch = crsf.original_pitch;
@@ -151,7 +151,7 @@ void CONTROL::control(void)
     // std::cout << "PF._uORB_PID__Roll_Input" << PF._uORB_PID__Roll_Input << "\r\n";
 
     PF._uORB_PID__Roll_Input -= gyro_roll * 1.35;
-    PF._uORB_PID_Pitch_Input -= gyro_pitch * 2.15;
+    PF._uORB_PID_Pitch_Input -= gyro_pitch * 1.35;
     // std::cout << "gyro_roll  " << gyro_roll << "\r\n";
     // std::cout << "PF._uORB_PID__Roll_Input" << PF._uORB_PID__Roll_Input << "\r\n";
 
@@ -182,6 +182,14 @@ void CONTROL::control(void)
                   PF._flag_PID_D__Pitch_Gain,
                   PF._flag_PID_I__Pitch_Max__Value);
 
+    if (PF._uORB_RC_Out_Yaw < 5 && PF._uORB_RC_Out_Yaw > -5)
+    {
+        PF._uORB_RC_Out_Yaw = 0;
+    }
+    else
+    {
+        PF._uORB_RC_Out_Yaw = PF._uORB_RC_Out_Yaw;
+    }
     // Yaw pid
     PID_CaculateExtend((((PF._uORB_PID_GYaw_Output + PF._uORB_RC_Out_Yaw) / 15.f) * PF._flag_PID_AngleRate___Yaw_Gain),
                        ((((PF._uORB_PID_GYaw_Output + PF._uORB_RC_Out_Yaw) / 15.f) * PF._flag_PID_AngleRate___Yaw_Gain) * (TF._Tmp_IMUAttThreadDT / TF.UpdateFreq)),
@@ -190,8 +198,9 @@ void CONTROL::control(void)
                        PF._flag_PID_P___Yaw_Gain, PF._flag_PID_I___Yaw_Gain, PF._flag_PID_D___Yaw_Gain, PF._flag_PID_I___Yaw_Max__Value);
 
     // PF._uORB_Leveling__Yaw = 5 * angle_yaw + crsf.original_yaw;
-    std::cout << "PF._uORB_PID_GYaw_Output" << PF._uORB_PID_GYaw_Output << "\r\n";
-    std::cout << "PF._uORB_RC_Out_Yaw" << PF._uORB_RC_Out_Yaw << "\r\n";
+    // std::cout << "PF._uORB_PID_GYaw_Output" << PF._uORB_PID_GYaw_Output << "\r\n";
+    // std::cout << "PF.mpu_6500_GZ" << mpu_6500_GZ << "\r\n";
+    // std::cout << "PF._uORB_Leveling__Yaw" << PF._uORB_Leveling__Yaw << "\r\n";
 
     // std::cout << "original_throttle" << crsf.original_throttle << "\r\n";
     // std::cout << "original_yaw" << crsf.original_yaw << "\r\n";
@@ -203,7 +212,7 @@ void CONTROL::control(void)
     // std::cout << "original_key3" << crsf.original_key4 << "\r\n";
 
     // std::cout << "PF._uORB_Leveling__Roll" << PF._uORB_Leveling__Roll << "\r\n";
-    std::cout << "PF._uORB_Leveling__Yaw" << PF._uORB_Leveling__Yaw << "\r\n";
+    // std::cout << "PF._uORB_Leveling__Yaw" << PF._uORB_Leveling__Yaw << "\r\n";
     // std::cout << "gyro_yaw" << gyro_yaw << "\r\n";
     pwmValue[0] = 1800 + crsf.original_throttle - PF._uORB_Leveling__Pitch + PF._uORB_Leveling__Roll + PF._uORB_Leveling__Yaw;
     pwmValue[1] = 1800 + crsf.original_throttle - PF._uORB_Leveling__Pitch - PF._uORB_Leveling__Roll - PF._uORB_Leveling__Yaw;
@@ -214,8 +223,8 @@ void CONTROL::control(void)
     // std::cout << "pwmValue[1]:" << pwmValue[1] << "\r\n";
     // std::cout << "pwmValue[2]:" << pwmValue[2] << "\r\n";
     // std::cout << "pwmValue[3]:" << pwmValue[3] << "\r\n";
-    // std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << angle_pitch << "\r\n";
-    // std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << angle_roll << "\r\n";
+    std::cout << "Angle_Pitch:" << std::fixed << std::setprecision(1) << PF._uORB_PID_AngleRate_Pitch << "\r\n";
+    std::cout << "Angle_Roll:" << std::fixed << std::setprecision(1) << PF._uORB_PID_AngleRate_Roll << "\r\n";
     // std::cout << "------------------------------------"
     //           << "\r\n";
 

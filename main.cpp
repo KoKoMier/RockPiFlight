@@ -14,6 +14,7 @@
 #include <mutex>
 #include "src/MPU6500/MPU6500.hpp"
 #include "src/CONTROL/control.hpp"
+#include "src/MPU6500/Quaternion.hpp"
 
 float pid_p_gain_roll = 0;
 float pid_i_gain_roll = 0;
@@ -96,12 +97,23 @@ int main(int argc, char *argv[])
                 int microstart = GetTimestamp();
                 // control.control();
                 SensorsParse();
+                float Angle_pitch;
+                float Angle_roll;
+                float Angle_yaw;
+                MahonyImuUpdate(mpu_6500_GX, mpu_6500_GY, mpu_6500_GZ, mpu_6500_AX, mpu_6500_AY, mpu_6500_AZ, &Angle_roll, &Angle_pitch, &Angle_yaw);
+
                 //
                 // std::cout << "---------------------------"
                 //          << "\r\n";
-                // std::cout << "mpu_6500_GX:" << std::fixed << std::setprecision(5) << mpu_6500_GX << "\r\n";
-                // std::cout << "mpu_6500_GY:" << std::fixed << std::setprecision(5) << mpu_6500_GY << "\r\n";
-                // std::cout << "mpu_6500_GZ:" << std::fixed << std::setprecision(5) << mpu_6500_GZ << "\r\n";
+                std::cout << "mpu_6500_GX:" << std::fixed << std::setprecision(5) << mpu_6500_GX << "\r\n";
+                std::cout << "mpu_6500_GY:" << std::fixed << std::setprecision(5) << mpu_6500_GY << "\r\n";
+                std::cout << "mpu_6500_GZ:" << std::fixed << std::setprecision(5) << mpu_6500_GZ << "\r\n";
+                std::cout << "mpu_6500_AX:" << std::fixed << std::setprecision(5) << mpu_6500_AX << "\r\n";
+                std::cout << "mpu_6500_AY:" << std::fixed << std::setprecision(5) << mpu_6500_AY << "\r\n";
+                std::cout << "mpu_6500_AZ:" << std::fixed << std::setprecision(5) << mpu_6500_AZ << "\r\n";
+                std::cout << "Angle_roll:" << std::fixed << std::setprecision(5) << Angle_roll * 57.3 << "\r\n";
+                std::cout << "Angle_pitch:" << std::fixed << std::setprecision(5) << Angle_pitch * 57.3 << "\r\n";
+                std::cout << "Angle_yaw:" << std::fixed << std::setprecision(5) << Angle_yaw * 57.3 << "\r\n";
                 // std::cout << "---------------------------"
                 //         << "\r\n";
                 // std::cout << "Angle_Pitch_Out:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
@@ -293,7 +305,8 @@ int main(int argc, char *argv[])
             new_tio.c_lflag &= (~ICANON & ~ECHO);
             tcsetattr(STDIN_FILENO, TCSANOW, &new_tio);
 
-            int mode = 0;
+            int mode1 = 0;
+            int mode2 = 0;
 
             std::thread inputThread([&channelData]
                                     {
@@ -302,17 +315,17 @@ int main(int argc, char *argv[])
                     int retValue = test.CRSFRead(channelData);
                     if (retValue > 0)
                     {
-                        crsf.original_throttle = test.rcToUs(channelData[1]) - 989;
-                        crsf.original_yaw = test.rcToUs(channelData[0]) - 1502;
+                        crsf.original_throttle = test.rcToUs(channelData[1]) - 990;
+                        crsf.original_yaw = test.rcToUs(channelData[0]) - 1499;
                         crsf.original_pitch = test.rcToUs(channelData[2]) - 1500;
-                        crsf.original_roll = test.rcToUs(channelData[3]) - 1497;
+                        crsf.original_roll = test.rcToUs(channelData[3]) - 1505;
                         crsf.original_key1 = test.rcToUs(channelData[6]);
                         crsf.original_key2 = test.rcToUs(channelData[4]);
                         crsf.original_key3 = test.rcToUs(channelData[5]);
                         crsf.original_key4 = test.rcToUs(channelData[7]);
 
                         // std::cout << "1" << test.rcToUs(channelData[0]) << "\r\n"; // yaw 990-2012  1502
-                        // std::cout << "2" << test.rcToUs(channelData[1]) << "\r\n"; // up 989-2008
+                        // std::cout << "2" << test.rcToUs(channelData[1]) << "\r\n"; // up 990-2012
                         // std::cout << "3" << test.rcToUs(channelData[2]) << "\r\n"; // pitch 989-2012 1500
                         // std::cout << "4" << test.rcToUs(channelData[3]) << "\r\n"; // roll 989-2008 1497
                         // std::cout << "5" << test.rcToUs(channelData[4]) << "\r\n"; // key[1] 1000 2000
@@ -341,25 +354,38 @@ int main(int argc, char *argv[])
                 control.control();
 
                 if (test.rcToUs(channelData[5]) == 2000)
-                    mode = 1;
+                    mode1 = 1;
                 if (test.rcToUs(channelData[5]) == 1000)
-                    mode = 0;
+                    mode1 = 0;
 
-                if (mode == 1)
+                if (mode1 == 1)
+                {
+                    if (crsf.original_throttle <= 2)
+                    {
+                        mode2 = 1;
+                    }
+                }
+                if (mode1 == 0)
+                {
+                    mode2 = 0;
+                }
+
+                if (mode2 == 1)
                 {
                     pca9685PWMWriteS(fd, pin1, limitValue(pwmValue[0]));
                     pca9685PWMWriteS(fd, pin2, limitValue(pwmValue[1]));
                     pca9685PWMWriteS(fd, pin3, limitValue(pwmValue[2]));
                     pca9685PWMWriteS(fd, pin4, limitValue(pwmValue[3]));
                 }
-                if (mode == 0)
+                if (mode2 == 0)
                 {
                     pca9685PWMWriteS(fd, pin1, 1800);
                     pca9685PWMWriteS(fd, pin2, 1800);
                     pca9685PWMWriteS(fd, pin3, 1800);
                     pca9685PWMWriteS(fd, pin4, 1800);
                 }
-                // std::cout << "mode = " << mode << "\r\n";
+                // std::cout << "mode1 = " << mode1 << "\r\n";
+                // std::cout << "mode2 = " << mode2 << "\r\n";
 
                 // std::cout << "pwmValue = " << pwmValue[0] << "\r\n";
                 // std::cout << "pwmValue = " << pwmValue[1] << "\r\n";
