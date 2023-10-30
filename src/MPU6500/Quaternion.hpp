@@ -5,7 +5,7 @@
 #include <cmath>
 
 
-#define sampleFreq	500.f			// sample frequency in Hz
+#define sampleFreq	2500.f			// sample frequency in Hz
 /*采样周期的一半，用于求解四元数微分方程时计算角增量
 请确定自己的姿态调用周期: 10ms,即上面的sampleFreq: 100Hz*/
 #define halfT 0.0092f
@@ -96,7 +96,6 @@ void MahonyImuUpdate(float gx, float gy, float gz, float ax, float ay, float az,
     q1 = q1 / norm;
     q2 = q2 / norm;
     q3 = q3 / norm;
-    std::cout << "az:" << az << "\r\n";
 
     
     q0q1 = q0*q1; q0q2 = q0*q2; q0q3 = q0*q3; q1q1 = q1*q1; q1q2 = q1*q2;

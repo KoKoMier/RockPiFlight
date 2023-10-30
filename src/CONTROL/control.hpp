@@ -1,5 +1,4 @@
-#ifndef CONTROL_H
-#define CONTROL_H
+#pragma once
 #include <iostream>
 #include "../SYS/sys.hpp"
 #include "../MPU6500/MPU6500.hpp"
@@ -230,5 +229,3 @@ void CONTROL::control(void)
 
     TF._Tmp_IMUAttThreadLast = GetTimestamp();
 }
-
-#endif

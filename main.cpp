@@ -15,6 +15,7 @@
 #include "src/MPU6500/MPU6500.hpp"
 #include "src/CONTROL/control.hpp"
 #include "src/MPU6500/Quaternion.hpp"
+#include "src/BaroDevice.hpp"
 
 float pid_p_gain_roll = 0;
 float pid_i_gain_roll = 0;
@@ -83,11 +84,56 @@ int main(int argc, char *argv[])
 
     TimestartUpLoad = GetTimestamp();
 
-    while ((argvs = getopt(argc, argv, "s::g::r::c::f::R")) != -1)
+    while ((argvs = getopt(argc, argv, "s::g::m::c::f::R")) != -1)
     {
         switch (argvs)
         {
-
+        case 'm':
+        {
+            BaroDevice *Baro;
+            try
+            {
+                Baro = new BaroDevice(BaroType::BMP280, "/dev/i2c-7", 0x76);
+            }
+            catch (int error)
+            {
+                switch (error)
+                {
+                case -1:
+                    std::cout << "open I2C device faild\n";
+                    break;
+                case -2:
+                    std::cout << "Set I2C device prop faild\n";
+                    break;
+                default:
+                    std::cout << "Set I2C Command faild\n";
+                    break;
+                }
+            }
+            float filterA = 0;
+            float filterP = 0;
+            float filterT = 0;
+            BaroData BData;
+            while (true)
+            {
+                int microstart = GetTimestamp();
+                BData = Baro->BaroRead();
+                if (BData.IsDataCorrect)
+                {
+                    filterP = BData.PressureHPA;
+                    filterT = BData.TemperatureC;
+                    std::cout << "Data.PressureHPA: " << filterP << "\r\n";
+                    std::cout << "Data.TemperatureC: " << filterT << "\r\n";
+                }
+                else
+                {
+                    std::cout << "I2C frame Error"
+                              << "\n";
+                }
+                int microend = GetTimestamp();
+                std::cout << "time: " << microend - microstart << "\r\n";
+            }
+        }
         case 's':
         {
             SensorsAcorrect();
@@ -105,19 +151,19 @@ int main(int argc, char *argv[])
                 //
                 // std::cout << "---------------------------"
                 //          << "\r\n";
-                std::cout << "mpu_6500_GX:" << std::fixed << std::setprecision(5) << mpu_6500_GX << "\r\n";
-                std::cout << "mpu_6500_GY:" << std::fixed << std::setprecision(5) << mpu_6500_GY << "\r\n";
-                std::cout << "mpu_6500_GZ:" << std::fixed << std::setprecision(5) << mpu_6500_GZ << "\r\n";
-                std::cout << "mpu_6500_AX:" << std::fixed << std::setprecision(5) << mpu_6500_AX << "\r\n";
-                std::cout << "mpu_6500_AY:" << std::fixed << std::setprecision(5) << mpu_6500_AY << "\r\n";
-                std::cout << "mpu_6500_AZ:" << std::fixed << std::setprecision(5) << mpu_6500_AZ << "\r\n";
-                std::cout << "Angle_roll:" << std::fixed << std::setprecision(5) << Angle_roll * 57.3 << "\r\n";
-                std::cout << "Angle_pitch:" << std::fixed << std::setprecision(5) << Angle_pitch * 57.3 << "\r\n";
-                std::cout << "Angle_yaw:" << std::fixed << std::setprecision(5) << Angle_yaw * 57.3 << "\r\n";
+                // std::cout << "mpu_6500_GX:" << std::fixed << std::setprecision(5) << mpu_6500_GX << "\r\n";
+                // std::cout << "mpu_6500_GY:" << std::fixed << std::setprecision(5) << mpu_6500_GY << "\r\n";
+                // std::cout << "mpu_6500_GZ:" << std::fixed << std::setprecision(5) << mpu_6500_GZ << "\r\n";
+                // std::cout << "mpu_6500_AX:" << std::fixed << std::setprecision(5) << mpu_6500_AX << "\r\n";
+                // std::cout << "mpu_6500_AY:" << std::fixed << std::setprecision(5) << mpu_6500_AY << "\r\n";
+                // std::cout << "mpu_6500_AZ:" << std::fixed << std::setprecision(5) << mpu_6500_AZ << "\r\n";
+                // std::cout << "Angle_roll:" << std::fixed << std::setprecision(5) << Angle_roll * 57.3 << "\r\n";
+                // std::cout << "Angle_pitch:" << std::fixed << std::setprecision(5) << Angle_pitch * 57.3 << "\r\n";
+                // std::cout << "Angle_yaw:" << std::fixed << std::setprecision(5) << Angle_yaw * 57.3 << "\r\n";
                 // std::cout << "---------------------------"
                 //         << "\r\n";
-                // std::cout << "Angle_Pitch_Out:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
-                // std::cout << "Angle_Roll_Out:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
+                std::cout << "Angle_Pitch_Out:" << std::fixed << std::setprecision(1) << Angle_Pitch_Out << "\r\n";
+                std::cout << "Angle_Roll_Out:" << std::fixed << std::setprecision(1) << Angle_Roll_Out << "\r\n";
                 // std::cout << "Tmp_AY:" << std::fixed << std::setprecision(2) << mpu_6500_AY
                 //         << "\r\n";
                 // std::cout << "---------------------------"

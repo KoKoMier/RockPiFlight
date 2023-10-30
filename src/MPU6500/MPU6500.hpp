@@ -1,5 +1,4 @@
-#ifndef MPU6500_H
-#define MPU6500_H
+#pragma once
 #include <iostream>
 #include "../SPI/LinuxSPI.hpp"
 #include <chrono>
@@ -214,7 +213,7 @@ void SensorsParse()
 {
     read_mpu_6500_data();
 
-    mpu_6500_GX_Now = (_mpu_6500_GX - _mpu_6500_GX_Cali) /MPU_6500_LSB;
+    mpu_6500_GX_Now = (_mpu_6500_GX - _mpu_6500_GX_Cali) / MPU_6500_LSB;
     mpu_6500_GY_Now = (_mpu_6500_GY - _mpu_6500_GY_Cali) / MPU_6500_LSB;
     mpu_6500_GZ_Now = (_mpu_6500_GZ - _mpu_6500_GZ_Cali) / MPU_6500_LSB;
 
@@ -381,4 +380,3 @@ void SensorsParse()
     // }
 }
 
-#endif

@@ -1,5 +1,4 @@
-#ifndef SYS_H
-#define SYS_H
+#pragma once
 #include <iostream>
 #include <sys/time.h>
 
@@ -81,4 +80,3 @@ int GetTimestamp()
     return ((tv.tv_sec * (uint64_t)1000000 + tv.tv_usec));
 }
 
-#endif
