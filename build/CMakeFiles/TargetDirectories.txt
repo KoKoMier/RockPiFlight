@@ -1,0 +1,6 @@
+/home/cyh/FlightCode/RockPiFlight/build/CMakeFiles/rebuild_cache.dir
+/home/cyh/FlightCode/RockPiFlight/build/CMakeFiles/edit_cache.dir
+/home/cyh/FlightCode/RockPiFlight/build/CMakeFiles/ROCKPIFlight.dir
+/home/cyh/FlightCode/RockPiFlight/build/src/CMakeFiles/rebuild_cache.dir
+/home/cyh/FlightCode/RockPiFlight/build/src/CMakeFiles/edit_cache.dir
+/home/cyh/FlightCode/RockPiFlight/build/src/CMakeFiles/ROCKPIAPI.dir
