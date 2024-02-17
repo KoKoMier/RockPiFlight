@@ -1,14 +1,13 @@
-set(MPUDriver "spidev" CACHE  INTERNAL "")
+cmake_minimum_required(VERSION 3.10)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+project(ROCKPIFlight)
 
-#CMake 最低版本要求
-cmake_minimum_required (VERSION 2.8)
-
-#项目信息
-project (Demo)
-
-set(src_dir main.cpp )
-add_executable(flight ${src_dir})
-
-set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
-target_link_libraries(flight PRIVATE Threads::Threads)
+add_subdirectory(src)
+add_executable(ROCKPIFlight "main.cpp")
+target_compile_definitions(ROCKPIFlight PRIVATE "-DGIT_COMMIT_HASH=\"${GIT_COMMIT_HASH}\"")
+target_link_libraries(ROCKPIFlight PRIVATE gcc_pic) # this option must link with musl
+target_link_libraries(ROCKPIFlight PRIVATE ROCKPIAPI)
+target_link_libraries(ROCKPIFlight PRIVATE Threads::Threads)

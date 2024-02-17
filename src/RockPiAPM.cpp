@@ -9,8 +9,9 @@ int RockPiAPMAPI::RockPiAPM::RockPiAPMInit(APMSettinngs APMInit)
     }
     //------------------------------------------------------------------------------------//
     {
-        pca9685PWMSetup("/dev/i2c-7",I2CPCA_ADDR,1526);
+        pca9685Setup("/dev/i2c-7", I2CPCA_ADDR, 1526);
     }
+    return 0;
 }
 
 int RockPiAPMAPI::RockPiAPM::APMCalibrator(int controller, int action, int input, double *data)
@@ -19,11 +20,11 @@ int RockPiAPMAPI::RockPiAPM::APMCalibrator(int controller, int action, int input
     {
         if (action == CaliESCStart)
         {
-            
         }
     }
     else
         ;
+    return 0;
 }
 
 int RockPiAPMAPI::RockPiAPM::GetTimestamp()

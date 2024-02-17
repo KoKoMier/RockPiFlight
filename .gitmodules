@@ -1,0 +1,9 @@
+[submodule "src/_thirdparty/RockPiMPU"]
+	path = src/_thirdparty/RockPiMPU
+	url = https://github.com/KoKoMier/RockPiMPU.git
+[submodule "src/_thirdparty/RockPiRC"]
+	path = src/_thirdparty/RockPiRC
+	url = https://github.com/KoKoMier/RockPiRC.git
+[submodule "src/_thirdparty/RaspberryPiBARO"]
+	path = src/_thirdparty/RaspberryPiBARO
+	url = https://github.com/KoKoMier/RaspberryPiBARO.git

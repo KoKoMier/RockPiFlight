@@ -5,7 +5,13 @@
 #include <iomanip>
 #include <cmath>
 #include <sys/time.h>
-#include "PCA9685/pca9685.hpp"
+#include "_thirdparty/PCA9685/pca9685.hpp"
+#include "_thirdparty/RockPiRC/src/M10QGPS/M10QGPS.hpp"
+#include "_thirdparty/RockPiRC/src/QMC5883/QMC5883.hpp"
+#include "_thirdparty/RaspberryPiBARO/src/BMP280/BMP280.hpp"
+#include "_thirdparty/RockPiMPU/src/MPU6500/MPU6500.hpp"
+#include "_thirdparty/RockPiMPU/src/_thirdparty/eigen/Eigen/Dense"
+#include "_thirdparty/RockPiMPU/src/_thirdparty/eigen/Eigen/LU"
 
 #define ESCCalibration 10
 #define CaliESCStart 0
