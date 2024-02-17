@@ -11,6 +11,7 @@
 #include <asm/ioctls.h>
 #include <sys/types.h>
 #include <linux/i2c-dev.h>
+#include <stdexcept>
 
 #define PCA9685_MODE1 0x0
 #define PCA9685_PRESCALE 0xFE
@@ -86,7 +87,6 @@ inline int pca9685Setup(const char *I2CChannel, uint8_t I2CAddress, int frequenc
         return -3;
     if (read(fd, data, 1) < 0)
         return -4;
-    printf("Data: %d\n", data[0]);
     // Write
     uint8_t settings = data[0] & 0x7f;
     uint8_t autoInc = settings | 0x20;

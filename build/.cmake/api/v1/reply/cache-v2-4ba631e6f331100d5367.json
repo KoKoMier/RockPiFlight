@@ -863,7 +863,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "ROCKPIFlight"
+			"value" : "RockPiFlight"
 		},
 		{
 			"name" : "CMAKE_RANLIB",
@@ -1158,7 +1158,7 @@
 			"value" : "[TRUE][v()]"
 		},
 		{
-			"name" : "ROCKPIFlight_BINARY_DIR",
+			"name" : "RockPiFlight_BINARY_DIR",
 			"properties" : 
 			[
 				{
@@ -1170,7 +1170,7 @@
 			"value" : "/home/cyh/FlightCode/RockPiFlight/build"
 		},
 		{
-			"name" : "ROCKPIFlight_SOURCE_DIR",
+			"name" : "RockPiFlight_SOURCE_DIR",
 			"properties" : 
 			[
 				{

@@ -53,7 +53,7 @@ CMAKE_BINARY_DIR = /home/cyh/FlightCode/RockPiFlight/build
 # Directory level rules for the build root directory
 
 # The main recursive "all" target.
-all: CMakeFiles/ROCKPIFlight.dir/all
+all: CMakeFiles/RockPiFlight.dir/all
 all: src/all
 
 .PHONY : all
@@ -64,7 +64,7 @@ preinstall: src/preinstall
 .PHONY : preinstall
 
 # The main recursive "clean" target.
-clean: CMakeFiles/ROCKPIFlight.dir/clean
+clean: CMakeFiles/RockPiFlight.dir/clean
 clean: src/clean
 
 .PHONY : clean
@@ -88,31 +88,31 @@ src/clean: src/CMakeFiles/ROCKPIAPI.dir/clean
 .PHONY : src/clean
 
 #=============================================================================
-# Target rules for target CMakeFiles/ROCKPIFlight.dir
+# Target rules for target CMakeFiles/RockPiFlight.dir
 
 # All Build rule for target.
-CMakeFiles/ROCKPIFlight.dir/all: src/CMakeFiles/ROCKPIAPI.dir/all
-	$(MAKE) -f CMakeFiles/ROCKPIFlight.dir/build.make CMakeFiles/ROCKPIFlight.dir/depend
-	$(MAKE) -f CMakeFiles/ROCKPIFlight.dir/build.make CMakeFiles/ROCKPIFlight.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cyh/FlightCode/RockPiFlight/build/CMakeFiles --progress-num=3,4 "Built target ROCKPIFlight"
-.PHONY : CMakeFiles/ROCKPIFlight.dir/all
+CMakeFiles/RockPiFlight.dir/all: src/CMakeFiles/ROCKPIAPI.dir/all
+	$(MAKE) -f CMakeFiles/RockPiFlight.dir/build.make CMakeFiles/RockPiFlight.dir/depend
+	$(MAKE) -f CMakeFiles/RockPiFlight.dir/build.make CMakeFiles/RockPiFlight.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cyh/FlightCode/RockPiFlight/build/CMakeFiles --progress-num=3,4 "Built target RockPiFlight"
+.PHONY : CMakeFiles/RockPiFlight.dir/all
 
 # Build rule for subdir invocation for target.
-CMakeFiles/ROCKPIFlight.dir/rule: cmake_check_build_system
+CMakeFiles/RockPiFlight.dir/rule: cmake_check_build_system
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cyh/FlightCode/RockPiFlight/build/CMakeFiles 4
-	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/ROCKPIFlight.dir/all
+	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/RockPiFlight.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /home/cyh/FlightCode/RockPiFlight/build/CMakeFiles 0
-.PHONY : CMakeFiles/ROCKPIFlight.dir/rule
+.PHONY : CMakeFiles/RockPiFlight.dir/rule
 
 # Convenience name for target.
-ROCKPIFlight: CMakeFiles/ROCKPIFlight.dir/rule
+RockPiFlight: CMakeFiles/RockPiFlight.dir/rule
 
-.PHONY : ROCKPIFlight
+.PHONY : RockPiFlight
 
 # clean rule for target.
-CMakeFiles/ROCKPIFlight.dir/clean:
-	$(MAKE) -f CMakeFiles/ROCKPIFlight.dir/build.make CMakeFiles/ROCKPIFlight.dir/clean
-.PHONY : CMakeFiles/ROCKPIFlight.dir/clean
+CMakeFiles/RockPiFlight.dir/clean:
+	$(MAKE) -f CMakeFiles/RockPiFlight.dir/build.make CMakeFiles/RockPiFlight.dir/clean
+.PHONY : CMakeFiles/RockPiFlight.dir/clean
 
 #=============================================================================
 # Target rules for target src/CMakeFiles/ROCKPIAPI.dir

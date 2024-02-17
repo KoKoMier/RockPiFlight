@@ -1,6 +1,18 @@
 {
     "5inchDefault": {
-        "Device": {},
-        "Filter": {}
+        "Device": {
+            "__I2CDevice": "/dev/i2c-7"
+        },
+        "Filter": {},
+        "PID": {
+            "Output": {
+                "ESCControllerType": 2,
+                "ESCPLFrequency": 1526,
+                "_flag_A1_Pin": 15,
+                "_flag_A2_Pin": 15,
+                "_flag_B1_Pin": 15,
+                "_flag_B2_Pin": 15
+            }
+        }
     }
 }

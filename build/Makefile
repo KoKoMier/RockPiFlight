@@ -111,17 +111,17 @@ depend:
 .PHONY : depend
 
 #=============================================================================
-# Target rules for targets named ROCKPIFlight
+# Target rules for targets named RockPiFlight
 
 # Build rule for target.
-ROCKPIFlight: cmake_check_build_system
-	$(MAKE) -f CMakeFiles/Makefile2 ROCKPIFlight
-.PHONY : ROCKPIFlight
+RockPiFlight: cmake_check_build_system
+	$(MAKE) -f CMakeFiles/Makefile2 RockPiFlight
+.PHONY : RockPiFlight
 
 # fast build rule for target.
-ROCKPIFlight/fast:
-	$(MAKE) -f CMakeFiles/ROCKPIFlight.dir/build.make CMakeFiles/ROCKPIFlight.dir/build
-.PHONY : ROCKPIFlight/fast
+RockPiFlight/fast:
+	$(MAKE) -f CMakeFiles/RockPiFlight.dir/build.make CMakeFiles/RockPiFlight.dir/build
+.PHONY : RockPiFlight/fast
 
 #=============================================================================
 # Target rules for targets named ROCKPIAPI
@@ -142,7 +142,7 @@ main.o: main.cpp.o
 
 # target to build an object file
 main.cpp.o:
-	$(MAKE) -f CMakeFiles/ROCKPIFlight.dir/build.make CMakeFiles/ROCKPIFlight.dir/main.cpp.o
+	$(MAKE) -f CMakeFiles/RockPiFlight.dir/build.make CMakeFiles/RockPiFlight.dir/main.cpp.o
 .PHONY : main.cpp.o
 
 main.i: main.cpp.i
@@ -151,7 +151,7 @@ main.i: main.cpp.i
 
 # target to preprocess a source file
 main.cpp.i:
-	$(MAKE) -f CMakeFiles/ROCKPIFlight.dir/build.make CMakeFiles/ROCKPIFlight.dir/main.cpp.i
+	$(MAKE) -f CMakeFiles/RockPiFlight.dir/build.make CMakeFiles/RockPiFlight.dir/main.cpp.i
 .PHONY : main.cpp.i
 
 main.s: main.cpp.s
@@ -160,7 +160,7 @@ main.s: main.cpp.s
 
 # target to generate assembly for a file
 main.cpp.s:
-	$(MAKE) -f CMakeFiles/ROCKPIFlight.dir/build.make CMakeFiles/ROCKPIFlight.dir/main.cpp.s
+	$(MAKE) -f CMakeFiles/RockPiFlight.dir/build.make CMakeFiles/RockPiFlight.dir/main.cpp.s
 .PHONY : main.cpp.s
 
 # Help Target
@@ -171,7 +171,7 @@ help:
 	@echo "... depend"
 	@echo "... rebuild_cache"
 	@echo "... edit_cache"
-	@echo "... ROCKPIFlight"
+	@echo "... RockPiFlight"
 	@echo "... ROCKPIAPI"
 	@echo "... main.o"
 	@echo "... main.i"

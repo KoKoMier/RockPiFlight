@@ -1,7 +1,7 @@
 [
 {
   "directory": "/home/cyh/FlightCode/RockPiFlight/build",
-  "command": "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-g++  -DGIT_COMMIT_HASH=\\\"\\\"  -g   -std=c++17 -o CMakeFiles/ROCKPIFlight.dir/main.cpp.o -c /home/cyh/FlightCode/RockPiFlight/main.cpp",
+  "command": "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-g++  -DGIT_COMMIT_HASH=\\\"\\\"  -g   -std=c++17 -o CMakeFiles/RockPiFlight.dir/main.cpp.o -c /home/cyh/FlightCode/RockPiFlight/main.cpp",
   "file": "/home/cyh/FlightCode/RockPiFlight/main.cpp"
 },
 {

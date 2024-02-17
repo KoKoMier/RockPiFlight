@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "ROCKPIFlight"
+			"path" : "RockPiFlight"
 		}
 	],
 	"backtrace" : 1,
@@ -76,7 +76,7 @@
 			"id" : "ROCKPIAPI::@145eef247bfb46b6828c"
 		}
 	],
-	"id" : "ROCKPIFlight::@6890427a1f51a3e7e1df",
+	"id" : "RockPiFlight::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -101,8 +101,8 @@
 		],
 		"language" : "CXX"
 	},
-	"name" : "ROCKPIFlight",
-	"nameOnDisk" : "ROCKPIFlight",
+	"name" : "RockPiFlight",
+	"nameOnDisk" : "RockPiFlight",
 	"paths" : 
 	{
 		"build" : ".",

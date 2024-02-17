@@ -45,7 +45,7 @@
 						0,
 						1
 					],
-					"name" : "ROCKPIFlight",
+					"name" : "RockPiFlight",
 					"targetIndexes" : 
 					[
 						0,
@@ -64,9 +64,9 @@
 				},
 				{
 					"directoryIndex" : 0,
-					"id" : "ROCKPIFlight::@6890427a1f51a3e7e1df",
-					"jsonFile" : "target-ROCKPIFlight-Debug-deba83ba269c2bc83782.json",
-					"name" : "ROCKPIFlight",
+					"id" : "RockPiFlight::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-RockPiFlight-Debug-705dbbf79618b20ef45c.json",
+					"name" : "RockPiFlight",
 					"projectIndex" : 0
 				}
 			]

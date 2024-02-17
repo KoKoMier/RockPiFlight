@@ -63,6 +63,7 @@
         "thread": "cpp",
         "typeinfo": "cpp",
         "cstdarg": "cpp",
-        "optional": "cpp"
+        "optional": "cpp",
+        "alignedvector3": "cpp"
     },
 }
