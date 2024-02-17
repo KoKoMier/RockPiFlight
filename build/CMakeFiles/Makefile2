@@ -44,10 +44,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/user/build-cyh/flight-control
+CMAKE_SOURCE_DIR = /home/cyh/FlightCode/RockPiFlight
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/user/build-cyh/flight-control/build
+CMAKE_BINARY_DIR = /home/cyh/FlightCode/RockPiFlight/build
 
 #=============================================================================
 # Directory level rules for the build root directory
@@ -74,14 +74,14 @@ clean: CMakeFiles/flight.dir/clean
 CMakeFiles/flight.dir/all:
 	$(MAKE) -f CMakeFiles/flight.dir/build.make CMakeFiles/flight.dir/depend
 	$(MAKE) -f CMakeFiles/flight.dir/build.make CMakeFiles/flight.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/user/build-cyh/flight-control/build/CMakeFiles --progress-num=1,2 "Built target flight"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --progress-dir=/home/cyh/FlightCode/RockPiFlight/build/CMakeFiles --progress-num=1,2 "Built target flight"
 .PHONY : CMakeFiles/flight.dir/all
 
 # Build rule for subdir invocation for target.
 CMakeFiles/flight.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/user/build-cyh/flight-control/build/CMakeFiles 2
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cyh/FlightCode/RockPiFlight/build/CMakeFiles 2
 	$(MAKE) -f CMakeFiles/Makefile2 CMakeFiles/flight.dir/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/user/build-cyh/flight-control/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/cyh/FlightCode/RockPiFlight/build/CMakeFiles 0
 .PHONY : CMakeFiles/flight.dir/rule
 
 # Convenience name for target.

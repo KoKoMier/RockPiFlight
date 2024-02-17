@@ -165,8 +165,8 @@
 	"kind" : "cmakeFiles",
 	"paths" : 
 	{
-		"build" : "/home/user/build-cyh/flight-control/build",
-		"source" : "/home/user/build-cyh/flight-control"
+		"build" : "/home/cyh/FlightCode/RockPiFlight/build",
+		"source" : "/home/cyh/FlightCode/RockPiFlight"
 	},
 	"version" : 
 	{

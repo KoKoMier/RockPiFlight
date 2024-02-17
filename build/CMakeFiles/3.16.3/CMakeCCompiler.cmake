@@ -1,4 +1,4 @@
-set(CMAKE_C_COMPILER "/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-gcc")
+set(CMAKE_C_COMPILER "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-gcc")
 set(CMAKE_C_COMPILER_ARG1 "")
 set(CMAKE_C_COMPILER_ID "GNU")
 set(CMAKE_C_COMPILER_VERSION "11.2.0")
@@ -70,7 +70,7 @@ endif()
 
 
 
-set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/aarch64-openwrt-linux-musl/sys-include;/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/aarch64-openwrt-linux-musl/include;/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/lib/gcc/aarch64-openwrt-linux-musl/11.2.0/include")
+set(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/aarch64-openwrt-linux-musl/sys-include;/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/aarch64-openwrt-linux-musl/include;/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/lib/gcc/aarch64-openwrt-linux-musl/11.2.0/include")
 set(CMAKE_C_IMPLICIT_LINK_LIBRARIES "ssp_nonshared;gcc_s;c;gcc_s")
-set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/usr/lib;/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/lib/gcc/aarch64-openwrt-linux-musl/11.2.0;/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/lib/gcc;/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/aarch64-openwrt-linux-musl/lib")
+set(CMAKE_C_IMPLICIT_LINK_DIRECTORIES "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/usr/lib;/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/lib/gcc/aarch64-openwrt-linux-musl/11.2.0;/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/lib/gcc;/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/aarch64-openwrt-linux-musl/lib")
 set(CMAKE_C_IMPLICIT_LINK_FRAMEWORK_DIRECTORIES "")

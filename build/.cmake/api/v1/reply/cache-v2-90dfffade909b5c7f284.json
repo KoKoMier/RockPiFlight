@@ -55,7 +55,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/user/build-cyh/flight-control/build"
+			"value" : "/home/cyh/FlightCode/RockPiFlight/build"
 		},
 		{
 			"name" : "CMAKE_CACHE_MAJOR_VERSION",
@@ -159,7 +159,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-g++"
+			"value" : "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-g++"
 		},
 		{
 			"name" : "CMAKE_CXX_COMPILER_AR",
@@ -287,7 +287,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-gcc"
+			"value" : "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/aarch64-openwrt-linux-gcc"
 		},
 		{
 			"name" : "CMAKE_C_COMPILER_AR",
@@ -619,7 +619,7 @@
 				}
 			],
 			"type" : "INTERNAL",
-			"value" : "/home/user/build-cyh/flight-control"
+			"value" : "/home/cyh/FlightCode/RockPiFlight"
 		},
 		{
 			"name" : "CMAKE_INSTALL_PREFIX",
@@ -895,7 +895,7 @@
 				}
 			],
 			"type" : "FILEPATH",
-			"value" : "/home/user/build/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/readelf"
+			"value" : "/home/cyh/openwrt-SingleFlight/openwrt-sdk-rockchip-armv8_gcc-11.2.0_musl.Linux-x86_64/staging_dir/toolchain-aarch64_generic_gcc-11.2.0_musl/bin/readelf"
 		},
 		{
 			"name" : "CMAKE_ROOT",
@@ -1155,7 +1155,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/user/build-cyh/flight-control/build"
+			"value" : "/home/cyh/FlightCode/RockPiFlight/build"
 		},
 		{
 			"name" : "Demo_SOURCE_DIR",
@@ -1167,7 +1167,7 @@
 				}
 			],
 			"type" : "STATIC",
-			"value" : "/home/user/build-cyh/flight-control"
+			"value" : "/home/cyh/FlightCode/RockPiFlight"
 		},
 		{
 			"name" : "FIND_PACKAGE_MESSAGE_DETAILS_Threads",

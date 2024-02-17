@@ -1,4 +1,4 @@
-# Install script for directory: /home/user/build-cyh/flight-control
+# Install script for directory: /home/cyh/FlightCode/RockPiFlight
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
@@ -45,5 +45,5 @@ endif()
 
 string(REPLACE ";" "\n" CMAKE_INSTALL_MANIFEST_CONTENT
        "${CMAKE_INSTALL_MANIFEST_FILES}")
-file(WRITE "/home/user/build-cyh/flight-control/build/${CMAKE_INSTALL_MANIFEST}"
+file(WRITE "/home/cyh/FlightCode/RockPiFlight/build/${CMAKE_INSTALL_MANIFEST}"
      "${CMAKE_INSTALL_MANIFEST_CONTENT}")
