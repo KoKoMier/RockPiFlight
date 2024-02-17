@@ -5,7 +5,6 @@ using namespace RockPiAPMAPI;
 
 #define CONFIGDIR "./APMconfig.json"
 
-int TimestartUpLoad = 0;
 void configSettle(const char *configDir, const char *substr, APMSettinngs &APMInit);
 
 int main(int argc, char *argv[])
