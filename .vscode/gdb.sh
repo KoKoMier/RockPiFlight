@@ -7,4 +7,4 @@ done
 
 sleep 2
 
-proxychains -q $2 "$@"
+$2 "$@"

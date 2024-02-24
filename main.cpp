@@ -6,6 +6,7 @@ using namespace RockPiAPMAPI;
 #define CONFIGDIR "./APMconfig.json"
 
 void configSettle(const char *configDir, const char *substr, APMSettinngs &APMInit);
+void configWrite(const char *configDir, const char *substr, const char *Target, double obj);
 
 int main(int argc, char *argv[])
 {
@@ -13,7 +14,7 @@ int main(int argc, char *argv[])
     APMSettinngs setting;
     double data[20] = {0};
 
-    while ((argvs = getopt(argc, argv, "e:E:m")) != -1)
+    while ((argvs = getopt(argc, argv, "e:E:m:a:")) != -1)
     {
         switch (argvs)
         {
@@ -47,6 +48,46 @@ int main(int argc, char *argv[])
             }
         }
         break;
+        case 'a':
+        {
+            int a;
+            double tmp[50] = {0};
+            RockPiAPM APM_Settle;
+            configSettle(CONFIGDIR, optarg, setting);
+            APM_Settle.RockPiAPMInit(setting);
+            std::cout << "start calibration Nose Up and Type int and enter:"
+                      << " \n";
+            std::cin >> a;
+            APM_Settle.APMCalibrator(ACCELCalibration, MPUAccelNoseUp, a, tmp);
+            // std::cout << "start calibration Nose Down and Type int and enter:"
+            //           << " \n";
+            // std::cin >> a;
+            // APM_Settle.APMCalibrator(ACCELCalibration, MPUAccelNoseUp, a, tmp);
+            // std::cout << "start calibration Nose Right Up and Type int and enter:"
+            //           << " \n";
+            // std::cin >> a;
+            // APM_Settle.APMCalibrator(ACCELCalibration, MPUAccelNoseUp, a, tmp);
+            // std::cout << "start calibration Nose Left Up and Type int and enter:"
+            //           << " \n";
+            // std::cin >> a;
+            // APM_Settle.APMCalibrator(ACCELCalibration, MPUAccelNoseUp, a, tmp);
+            // std::cout << "start calibration Nose Top  and Type int and enter:"
+            //           << " \n";
+            // std::cin >> a;
+            // APM_Settle.APMCalibrator(ACCELCalibration, MPUAccelNoseUp, a, tmp);
+            // std::cout << "start calibration Nose Rev and Type int and enter:"
+            //           << " \n";
+            // std::cin >> a;
+            // APM_Settle.APMCalibrator(ACCELCalibration, MPUAccelNoseUp, a, tmp);
+            // APM_Settle.APMCalibrator(ACCELCalibration, MPUAccelCaliGet, a, tmp);
+            // configWrite(CONFIGDIR, optarg, "_flag_MPU9250_A_X_Cali", tmp[MPUAccelCaliX]);
+            // configWrite(CONFIGDIR, optarg, "_flag_MPU9250_A_Y_Cali", tmp[MPUAccelCaliY]);
+            // configWrite(CONFIGDIR, optarg, "_flag_MPU9250_A_Z_Cali", tmp[MPUAccelCaliZ]);
+            // configWrite(CONFIGDIR, optarg, "_flag_MPU9250_A_X_Scal", tmp[MPUAccelScalX]);
+            // configWrite(CONFIGDIR, optarg, "_flag_MPU9250_A_Y_Scal", tmp[MPUAccelScalY]);
+            // configWrite(CONFIGDIR, optarg, "_flag_MPU9250_A_Z_Scal", tmp[MPUAccelScalZ]);
+        }
+        break;
         }
     }
 }
@@ -71,4 +112,19 @@ void configSettle(const char *configDir, const char *substr, APMSettinngs &APMIn
     APMInit.OC._flag_B2_Pin = OC["_flag_B2_Pin"].get<int>();
     APMInit.OC.ESCPLFrequency = OC["ESCPLFrequency"].get<int>();
     APMInit.OC.ESCControllerType = OC["ESCControllerType"].get<int>();
+}
+
+void configWrite(const char *configDir, const char *substr, const char *Target, double obj)
+{
+    std::ifstream config(configDir);
+    std::string content((std::istreambuf_iterator<char>(config)),
+                        (std::istreambuf_iterator<char>()));
+    nlohmann::json Configdata = nlohmann::json::parse(content);
+    nlohmann::json subdata = Configdata[substr]["Sensor"];
+    subdata[Target] = obj;
+    Configdata[substr]["Sensor"] = subdata;
+    std::ofstream configs;
+    configs.open(configDir);
+    configs << std::setw(4) << Configdata << std::endl;
+    configs.close();
 }

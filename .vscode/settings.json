@@ -1,11 +1,11 @@
 {
     "custom.user": "root",
-    "custom.ipaddress": "192.168.97.145",
+    "custom.ipaddress": "192.168.137.172",
     "custom.gdbserverPort": "9590",
     "custom.gdb": "aarch64-openwrt-linux-gdb",
     "custom.exe": "flight",
     "custom.exeargs": "-m",
-    "custom.proxyext": "proxychains -q",
+    "custom.proxyext": "",
     "custom.extenalcmd": "",
     "files.associations": {
         "iomanip": "cpp",
@@ -64,6 +64,18 @@
         "typeinfo": "cpp",
         "cstdarg": "cpp",
         "optional": "cpp",
-        "alignedvector3": "cpp"
+        "alignedvector3": "cpp",
+        "complex": "cpp",
+        "csignal": "cpp",
+        "cstring": "cpp",
+        "forward_list": "cpp",
+        "list": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "unordered_set": "cpp",
+        "hash_map": "cpp",
+        "future": "cpp",
+        "cinttypes": "cpp",
+        "valarray": "cpp"
     },
 }

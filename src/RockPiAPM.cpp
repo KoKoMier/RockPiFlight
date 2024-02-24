@@ -13,7 +13,12 @@ int RockPiAPMAPI::RockPiAPM::RockPiAPMInit(APMSettinngs APMInit)
     //------------------------------------------------------------------------------------//
     {
         DF.ESCDevice.reset(new ESCGenerator(EF.ESCControllerType, DF.I2CDevice.c_str(), I2CPCA_ADDR, EF.ESCPLFrequency));
-        // pca9685Setup("/dev/i2c-7", I2CPCA_ADDR, 1526);
+    }
+    //------------------------------------------------------------------------------------//
+    {
+        MPUConfig config;
+        DF.MPUDevice.reset(new RPiMPU6500(config));
+        DF.MPUDevice->MPUCalibration(SF._flag_MPU_Accel_Cali);
     }
     return 0;
 }
@@ -42,8 +47,11 @@ int RockPiAPMAPI::RockPiAPM::APMCalibrator(int controller, int action, int input
             return 1;
         }
     }
-    else
-        ;
+    else if (controller == ACCELCalibration)
+    {
+        DF.MPUDevice->MPUAccelCalibration(action, data);
+    }
+
     return 0;
 }
 

@@ -95,7 +95,14 @@ namespace RockPiAPMAPI
             std::string I2CDevice;
 
             std::unique_ptr<ESCGenerator> ESCDevice;
+            std::unique_ptr<RPiMPU6500> MPUDevice;
         } DF;
+
+        struct SensorsINFO
+        {
+            double _flag_MPU_Accel_Cali[20];
+
+        } SF;
 
     private:
         void ConfigReader(APMSettinngs APMInit);

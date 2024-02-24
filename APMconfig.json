@@ -13,6 +13,14 @@
                 "_flag_B1_Pin": 15,
                 "_flag_B2_Pin": 15
             }
+        },
+        "Sensor": {
+            "_flag_MPU9250_A_X_Cali": 0,
+            "_flag_MPU9250_A_X_Scal": 0,
+            "_flag_MPU9250_A_Y_Cali": 0,
+            "_flag_MPU9250_A_Y_Scal": 0,
+            "_flag_MPU9250_A_Z_Cali": 0,
+            "_flag_MPU9250_A_Z_Scal": 0
         }
     }
 }
