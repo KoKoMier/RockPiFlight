@@ -83,8 +83,9 @@ namespace RockPiAPMAPI
 
         struct SafyINFO
         {
-            
-        } SF;
+            bool _flag_ESC_ARMED = false;
+
+        } AF;
         struct ESCINFO
         {
             int ESCPLFrequency = 1526;
@@ -94,13 +95,18 @@ namespace RockPiAPMAPI
             int _flag_A2_Pin = 1;
             int _flag_B1_Pin = 2;
             int _flag_B2_Pin = 3;
-
+            int _uORB_A1_Speed = 0;
+            int _uORB_A2_Speed = 0;
+            int _uORB_B1_Speed = 0;
+            int _uORB_B2_Speed = 0;
             const int _Flag_Lock_Throttle = 1000;
             const int _Flag_Max__Throttle = 2000;
 
         } EF;
+
         struct TaskThread
         {
+
             int _flag_SystemStartUp_Time = 0;
             const int _flag_Sys_CPU_Asign = 2;
             float _flag_IMUFlowFreq = 1000.f;
