@@ -5,6 +5,7 @@
 #include <iomanip>
 #include <cmath>
 #include <sys/time.h>
+#include <csignal>
 #include "_thirdparty/ESCGenerator.hpp"
 #include "_thirdparty/FlowController.hpp"
 #include "_thirdparty/PCA9685/pca9685.hpp"
@@ -24,6 +25,8 @@
 
 namespace RockPiAPMAPI
 {
+    inline volatile std::sig_atomic_t SystemSignal;
+
     struct APMSettinngs
     {
         struct DeviceConfig
@@ -65,11 +68,18 @@ namespace RockPiAPMAPI
     class RockPiAPM
     {
     public:
+        void RockPiAPMStartUp();
+
         int RockPiAPMInit(APMSettinngs APMInit);
 
         int APMCalibrator(int controller, int action, int input, double *data);
 
     protected:
+        void IMUSensorsTaskReg();
+
+        void ControllerTaskReg();
+
+        void ESCUpdateTaskReg();
         struct ESCINFO
         {
             int ESCPLFrequency = 1526;
@@ -87,6 +97,12 @@ namespace RockPiAPMAPI
         struct TaskThread
         {
             int _flag_SystemStartUp_Time = 0;
+            const int _flag_Sys_CPU_Asign = 2;
+            float _flag_IMUFlowFreq = 1000.f;
+
+            std::unique_ptr<FlowThread> IMUFlow;
+            std::unique_ptr<FlowThread> RTXFlow;
+            std::unique_ptr<FlowThread> ESCFlow;
 
         } TF;
 
@@ -100,6 +116,8 @@ namespace RockPiAPMAPI
 
         struct SensorsINFO
         {
+            //=============MPU================//
+            MPUData _uORB_MPU_Data;
             double _flag_MPU_Accel_Cali[20];
 
         } SF;

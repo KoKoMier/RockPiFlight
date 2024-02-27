@@ -5,6 +5,7 @@ using namespace RockPiAPMAPI;
 
 #define CONFIGDIR "./APMconfig.json"
 
+void SignalCatch(int Signal);
 void configSettle(const char *configDir, const char *substr, APMSettinngs &APMInit);
 void configWrite(const char *configDir, const char *substr, const char *Target, double obj);
 
@@ -14,16 +15,32 @@ int main(int argc, char *argv[])
     APMSettinngs setting;
     double data[20] = {0};
 
-    while ((argvs = getopt(argc, argv, "e:E:m:a:")) != -1)
+    while ((argvs = getopt(argc, argv, "r:e:E:a:m")) != -1)
     {
         switch (argvs)
         {
         case 'm':
         {
+            std::cout << "./RockPiFlight -r 5inchDefault fot flight start"
+                      << "\r\n";
             std::cout << "./RockPiFlight -e 5inchDefault for motor calibration"
                       << "\r\n";
             std::cout << "./RockPiFlight -E 5inchDefault for motor test"
                       << "\r\n";
+            std::cout << "./RockPiFlight -a 5inchDefault for MPU6500 Calibrator"
+                      << "\r\n";
+        }
+        break;
+        case 'r':
+        {
+            RockPiAPM APM_Settle;
+            configSettle(CONFIGDIR, optarg, setting);
+            APM_Settle.RockPiAPMInit(setting);
+            //
+            std::signal(SIGINT, SignalCatch);
+            std::signal(SIGTERM, SignalCatch);
+            //
+            APM_Settle.RockPiAPMStartUp();
         }
         break;
         case 'e':
@@ -128,3 +145,8 @@ void configWrite(const char *configDir, const char *substr, const char *Target, 
     configs << std::setw(4) << Configdata << std::endl;
     configs.close();
 }
+
+void SignalCatch(int Signal)
+{
+    RockPiAPMAPI::SystemSignal = Signal;
+};

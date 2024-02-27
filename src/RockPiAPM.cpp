@@ -55,6 +55,35 @@ int RockPiAPMAPI::RockPiAPM::APMCalibrator(int controller, int action, int input
     return 0;
 }
 
+void RockPiAPMAPI::RockPiAPM::IMUSensorsTaskReg()
+{
+    TF.IMUFlow.reset(new FlowThread(
+        [&]
+        {
+            SF._uORB_MPU_Data = DF.MPUDevice->MPUSensorsDataGet();
+
+        },TF._flag_Sys_CPU_Asign, TF._flag_IMUFlowFreq
+    ))
+}
+
+void RockPiAPMAPI::RockPiAPM::ControllerTaskReg()
+{
+    
+}
+void RockPiAPMAPI::RockPiAPM::ESCUpdateTaskReg()
+{
+
+}
+
+void RockPiAPMAPI::RockPiAPM::RockPiAPMStartUp()
+{
+    IMUSensorsTaskReg();
+
+    ControllerTaskReg();
+
+    ESCUpdateTaskReg();
+}
+
 void RockPiAPMAPI::RockPiAPM::ConfigReader(APMSettinngs APMInit)
 {
     //==========================================================Device Type=======/
