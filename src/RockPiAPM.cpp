@@ -61,18 +61,41 @@ void RockPiAPMAPI::RockPiAPM::IMUSensorsTaskReg()
         [&]
         {
             SF._uORB_MPU_Data = DF.MPUDevice->MPUSensorsDataGet();
-
-        },TF._flag_Sys_CPU_Asign, TF._flag_IMUFlowFreq
-    ))
+        },
+        TF._flag_Sys_CPU_Asign, TF._flag_IMUFlowFreq));
 }
 
 void RockPiAPMAPI::RockPiAPM::ControllerTaskReg()
 {
-    
+    TF.RTXFlow.reset(new FlowThread(
+        [&] {
+
+        },
+        TF._flag_Sys_CPU_Asign, TF._flag_RTXFlowFreq));
 }
 void RockPiAPMAPI::RockPiAPM::ESCUpdateTaskReg()
 {
-
+    TF.ESCFlow.reset(new FlowThread(
+        [&]
+        {
+            DF.I2CLock.lock();
+            if (AF._flag_ESC_ARMED)
+            {
+                DF.ESCDevice->ESCUpdate(EF._flag_A1_Pin, EF._Flag_Lock_Throttle);
+                DF.ESCDevice->ESCUpdate(EF._flag_A2_Pin, EF._Flag_Lock_Throttle);
+                DF.ESCDevice->ESCUpdate(EF._flag_B1_Pin, EF._Flag_Lock_Throttle);
+                DF.ESCDevice->ESCUpdate(EF._flag_B2_Pin, EF._Flag_Lock_Throttle);
+            }
+            if (!AF._flag_ESC_ARMED)
+            {
+                DF.ESCDevice->ESCUpdate(EF._flag_A1_Pin, EF._uORB_A1_Speed);
+                DF.ESCDevice->ESCUpdate(EF._flag_A2_Pin, EF._uORB_A2_Speed);
+                DF.ESCDevice->ESCUpdate(EF._flag_B1_Pin, EF._uORB_B1_Speed);
+                DF.ESCDevice->ESCUpdate(EF._flag_B2_Pin, EF._uORB_B2_Speed);
+            }
+            DF.I2CLock.unlock();
+        },
+        TF._flag_Sys_CPU_Asign, TF._flag_ESCFlowFreq));
 }
 
 void RockPiAPMAPI::RockPiAPM::RockPiAPMStartUp()

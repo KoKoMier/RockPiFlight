@@ -80,6 +80,11 @@ namespace RockPiAPMAPI
         void ControllerTaskReg();
 
         void ESCUpdateTaskReg();
+
+        struct SafyINFO
+        {
+            
+        } SF;
         struct ESCINFO
         {
             int ESCPLFrequency = 1526;
@@ -99,6 +104,8 @@ namespace RockPiAPMAPI
             int _flag_SystemStartUp_Time = 0;
             const int _flag_Sys_CPU_Asign = 2;
             float _flag_IMUFlowFreq = 1000.f;
+            float _flag_RTXFlowFreq = 250.f;
+            float _flag_ESCFlowFreq = 1000.f;
 
             std::unique_ptr<FlowThread> IMUFlow;
             std::unique_ptr<FlowThread> RTXFlow;
@@ -109,6 +116,7 @@ namespace RockPiAPMAPI
         struct DeviceINFO
         {
             std::string I2CDevice;
+            std::mutex I2CLock;
 
             std::unique_ptr<ESCGenerator> ESCDevice;
             std::unique_ptr<RPiMPU6500> MPUDevice;
