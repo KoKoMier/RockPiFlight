@@ -37,8 +37,8 @@ int main(int argc, char *argv[])
             configSettle(CONFIGDIR, optarg, setting);
             APM_Settle.RockPiAPMInit(setting);
             //
-            // std::signal(SIGINT, SignalCatch);
-            // std::signal(SIGTERM, SignalCatch);
+            std::signal(SIGINT, SignalCatch);
+            std::signal(SIGTERM, SignalCatch);
             //
             APM_Settle.RockPiAPMStartUp();
             APM_Settle.TaskThreadBlock();

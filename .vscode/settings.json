@@ -76,6 +76,8 @@
         "hash_map": "cpp",
         "future": "cpp",
         "cinttypes": "cpp",
-        "valarray": "cpp"
+        "valarray": "cpp",
+        "lu": "cpp",
+        "dense": "cpp"
     },
 }

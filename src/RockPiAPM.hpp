@@ -13,6 +13,7 @@
 #include "_thirdparty/RockPiRC/src/QMC5883/QMC5883.hpp"
 #include "_thirdparty/RaspberryPiBARO/src/BMP280/BMP280.hpp"
 #include "_thirdparty/RockPiMPU/src/MPU6500/MPU6500.hpp"
+#include "_thirdparty/RockPiRC/src/CRSF/CRSFUart.hpp"
 #include "_thirdparty/RockPiMPU/src/_thirdparty/eigen/Eigen/Dense"
 #include "_thirdparty/RockPiMPU/src/_thirdparty/eigen/Eigen/LU"
 
@@ -22,6 +23,10 @@
 #define ESCCalibration 10
 #define CaliESCStart 0
 #define I2CPCA_ADDR 0x70
+
+#define RCIsIbus 0
+#define RCIsSbus 1
+#define RCIsCRSF 2
 
 namespace RockPiAPMAPI
 {
@@ -86,6 +91,10 @@ namespace RockPiAPMAPI
 
         int APMCalibrator(int controller, int action, int input, double *data);
 
+        void RPiSingleAPMDeInit();
+
+        ~RockPiAPM() { RPiSingleAPMDeInit(); }
+
     protected:
         void IMUSensorsTaskReg();
 
@@ -130,15 +139,21 @@ namespace RockPiAPMAPI
             std::unique_ptr<FlowThread> RTXFlow;
             std::unique_ptr<FlowThread> ESCFlow;
 
+            bool _flag_Block_Task_Running = false;
+
         } TF;
 
         struct DeviceINFO
         {
             std::string I2CDevice;
-            std::mutex I2CLock;
+            std::string RCDevice;
+            std::string MPUDeviceSPI;
 
+            std::mutex I2CLock;
             std::unique_ptr<ESCGenerator> ESCDevice;
             std::unique_ptr<RPiMPU6500> MPUDevice;
+            std::unique_ptr<CRSF> CRSFInit;
+
         } DF;
 
         struct SensorsINFO
@@ -152,9 +167,27 @@ namespace RockPiAPMAPI
 
         } SF;
 
+        struct RCINFO
+        {
+            int RC_Type;
+            int _uORB_RC_Channel_PWM[16] = {1500, 1500, 1500, 1500, 2000, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            int _Tmp_RC_Data[36] = {0};
+
+        } RF;
+
     private:
         void ConfigReader(APMSettinngs APMInit);
 
+        void SaftyCheck();
+
+        void DebugOutPut();
+
         int GetTimestamp();
+
+        void AttitudeUpdate();
+
+        void PID_Caculate(float inputData, float &outputData,
+                          float &last_I_Data, float &last_D_Data,
+                          float P_Gain, float I_Gain, float D_Gain, float I_Max);
     };
 }
