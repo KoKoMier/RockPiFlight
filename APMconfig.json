@@ -15,12 +15,15 @@
             }
         },
         "Sensor": {
-            "_flag_MPU9250_A_X_Cali": 0,
-            "_flag_MPU9250_A_X_Scal": 0,
-            "_flag_MPU9250_A_Y_Cali": 0,
-            "_flag_MPU9250_A_Y_Scal": 0,
-            "_flag_MPU9250_A_Z_Cali": 0,
-            "_flag_MPU9250_A_Z_Scal": 0
+            "_flag_MPU6500_A_X_Cali": 5272.6122929555695,
+            "_flag_MPU6500_A_X_Scal": 0.9979673967267594,
+            "_flag_MPU6500_A_Y_Cali": 7331.536670071499,
+            "_flag_MPU6500_A_Y_Scal": 0.9961574006517824,
+            "_flag_MPU6500_A_Z_Cali": 632.1451371837684,
+            "_flag_MPU6500_A_Z_Scal": 0.9818616874261535,
+            "_flag_MPU_Flip_Pitch": 0,
+            "_flag_MPU_Flip__Roll": 180,
+            "_flag_MPU_Flip___Yaw": 270
         }
     }
 }

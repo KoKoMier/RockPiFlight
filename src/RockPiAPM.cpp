@@ -17,6 +17,10 @@ int RockPiAPMAPI::RockPiAPM::RockPiAPMInit(APMSettinngs APMInit)
     //------------------------------------------------------------------------------------//
     {
         MPUConfig config;
+        config.MPU_Flip__Roll = SF._flag_MPU_Flip__Roll;
+        config.MPU_Flip_Pitch = SF._flag_MPU_Flip_Pitch;
+        config.MPU_Flip___Yaw = SF._flag_MPU_Flip___Yaw;
+
         DF.MPUDevice.reset(new RPiMPU6500(config));
         DF.MPUDevice->MPUCalibration(SF._flag_MPU_Accel_Cali);
     }
@@ -61,6 +65,12 @@ void RockPiAPMAPI::RockPiAPM::IMUSensorsTaskReg()
         [&]
         {
             SF._uORB_MPU_Data = DF.MPUDevice->MPUSensorsDataGet();
+            //============Online Catlibration======================================//
+            {
+                if (AF._flag_MPUCalibrating == 1)
+                {
+                }
+            }
         },
         TF._flag_Sys_CPU_Asign, TF._flag_IMUFlowFreq));
 }
@@ -98,6 +108,19 @@ void RockPiAPMAPI::RockPiAPM::ESCUpdateTaskReg()
         TF._flag_Sys_CPU_Asign, TF._flag_ESCFlowFreq));
 }
 
+void RockPiAPMAPI::RockPiAPM::TaskThreadBlock()
+{
+    while (true)
+    {
+        std::cout << "SF._uORB_Real__Roll" << SF._uORB_MPU_Data._uORB_Real__Roll
+                  << "\r\n";
+        std::cout << "SF._uORB_Real_Pitch" << SF._uORB_MPU_Data._uORB_Real_Pitch
+                  << "\r\n";
+        std::cout << "======================================"
+                  << "\r\n";
+        usleep(10000);
+    }
+}
 void RockPiAPMAPI::RockPiAPM::RockPiAPMStartUp()
 {
     IMUSensorsTaskReg();
@@ -118,6 +141,16 @@ void RockPiAPMAPI::RockPiAPM::ConfigReader(APMSettinngs APMInit)
     EF._flag_B2_Pin = APMInit.OC._flag_B2_Pin;
     EF.ESCPLFrequency = APMInit.OC.ESCPLFrequency;
     EF.ESCControllerType = (GeneratorType)APMInit.OC.ESCControllerType;
+    //==============================================================Sensors config==/
+    SF._flag_MPU_Flip__Roll = APMInit.SC._flag_MPU_Flip__Roll;
+    SF._flag_MPU_Flip_Pitch = APMInit.SC._flag_MPU_Flip_Pitch;
+    SF._flag_MPU_Flip___Yaw = APMInit.SC._flag_MPU_Flip___Yaw;
+    SF._flag_MPU_Accel_Cali[MPUAccelCaliX] = APMInit.SC._flag_MPU9250_A_X_Cali;
+    SF._flag_MPU_Accel_Cali[MPUAccelCaliY] = APMInit.SC._flag_MPU9250_A_Y_Cali;
+    SF._flag_MPU_Accel_Cali[MPUAccelCaliZ] = APMInit.SC._flag_MPU9250_A_Z_Cali;
+    SF._flag_MPU_Accel_Cali[MPUAccelScalX] = APMInit.SC._flag_MPU9250_A_X_Scal;
+    SF._flag_MPU_Accel_Cali[MPUAccelScalY] = APMInit.SC._flag_MPU9250_A_Y_Scal;
+    SF._flag_MPU_Accel_Cali[MPUAccelScalZ] = APMInit.SC._flag_MPU9250_A_Z_Scal;
 }
 
 int RockPiAPMAPI::RockPiAPM::GetTimestamp()

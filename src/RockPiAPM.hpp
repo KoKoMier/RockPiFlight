@@ -42,7 +42,17 @@ namespace RockPiAPMAPI
 
         struct SensorConfig
         {
-
+            int _flag_MPU_Flip__Roll;
+            int _flag_MPU_Flip_Pitch;
+            int _flag_MPU_Flip___Yaw;
+            double _flag_Accel__Roll_Cali;
+            double _flag_Accel_Pitch_Cali;
+            double _flag_MPU9250_A_X_Cali;
+            double _flag_MPU9250_A_Y_Cali;
+            double _flag_MPU9250_A_Z_Cali;
+            double _flag_MPU9250_A_X_Scal;
+            double _flag_MPU9250_A_Y_Scal;
+            double _flag_MPU9250_A_Z_Scal;
         } SC;
 
         struct OutputConfig
@@ -70,6 +80,8 @@ namespace RockPiAPMAPI
     public:
         void RockPiAPMStartUp();
 
+        void TaskThreadBlock();
+
         int RockPiAPMInit(APMSettinngs APMInit);
 
         int APMCalibrator(int controller, int action, int input, double *data);
@@ -84,6 +96,7 @@ namespace RockPiAPMAPI
         struct SafyINFO
         {
             bool _flag_ESC_ARMED = false;
+            bool _flag_MPUCalibrating = false;
 
         } AF;
         struct ESCINFO
@@ -132,6 +145,9 @@ namespace RockPiAPMAPI
         {
             //=============MPU================//
             MPUData _uORB_MPU_Data;
+            int _flag_MPU_Flip__Roll;
+            int _flag_MPU_Flip_Pitch;
+            int _flag_MPU_Flip___Yaw;
             double _flag_MPU_Accel_Cali[20];
 
         } SF;
