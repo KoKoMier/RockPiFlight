@@ -42,6 +42,7 @@ namespace RockPiAPMAPI
 
         struct PIDConfig
         {
+            float _flag_PID_Rate_Limit;
 
         } PC;
 
@@ -108,6 +109,12 @@ namespace RockPiAPMAPI
             bool _flag_MPUCalibrating = false;
 
         } AF;
+
+        struct PIDINFO
+        {
+            float _flag_PID_Rate_Limit = 500.f;
+
+        } PF;
         struct ESCINFO
         {
             int ESCPLFrequency = 1526;
@@ -189,5 +196,13 @@ namespace RockPiAPMAPI
         void PID_Caculate(float inputData, float &outputData,
                           float &last_I_Data, float &last_D_Data,
                           float P_Gain, float I_Gain, float D_Gain, float I_Max);
+        void PID_CaculateExtend(float inputDataP, float inputDataI, float inputDataD, float &outputData,
+                                float &last_I_Data, float &last_D_Data,
+                                float P_Gain, float I_Gain, float D_Gain, float I_Max);
+
+        void PID_CaculateHyper(float inputDataP, float inputDataI, float inputDataD, float &outputData,
+                               float &last_I_Data, float &last_D_Data,
+                               float P_Gain, float I_Gain, float D_Gain, float I_Max);
     };
+
 }

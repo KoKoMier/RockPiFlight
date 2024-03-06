@@ -115,6 +115,7 @@ void RockPiAPMAPI::RockPiAPM::ControllerTaskReg()
         },
         TF._flag_Sys_CPU_Asign, TF._flag_RTXFlowFreq));
 }
+
 void RockPiAPMAPI::RockPiAPM::ESCUpdateTaskReg()
 {
     TF.ESCFlow.reset(new FlowThread(
@@ -161,6 +162,19 @@ void RockPiAPMAPI::RockPiAPM::RockPiAPMStartUp()
 
 void RockPiAPMAPI::RockPiAPM::AttitudeUpdate()
 {
+    {
+        // IMU SaftyChecking---------------------------------------------------------//
+        if (SF._uORB_MPU_Data._uORB_Real__Roll > 70 || SF._uORB_MPU_Data._uORB_Real__Roll < -70 ||
+            SF._uORB_MPU_Data._uORB_Real_Pitch > 70 || SF._uORB_MPU_Data._uORB_Real_Pitch < -70)
+        {
+            ////////////////////////////////////////////////////////////////////////////////
+        }
+        SF._uORB_MPU_Data._uORB_Gryo_Pitch = SF._uORB_MPU_Data._uORB_Gryo_Pitch > PF._flag_PID_Rate_Limit ? PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo_Pitch;
+        SF._uORB_MPU_Data._uORB_Gryo_Pitch = SF._uORB_MPU_Data._uORB_Gryo_Pitch < -1 * PF._flag_PID_Rate_Limit ? -1 * PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo_Pitch;
+        SF._uORB_MPU_Data._uORB_Gryo__Roll = SF._uORB_MPU_Data._uORB_Gryo__Roll > PF._flag_PID_Rate_Limit ? PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo__Roll;
+        SF._uORB_MPU_Data._uORB_Gryo__Roll = SF._uORB_MPU_Data._uORB_Gryo__Roll < -1 * PF._flag_PID_Rate_Limit ? -1 * PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo__Roll;
+        
+    }
 }
 
 void RockPiAPMAPI::RockPiAPM::PID_Caculate(float inputData, float &outputData,
@@ -172,9 +186,46 @@ void RockPiAPMAPI::RockPiAPM::PID_Caculate(float inputData, float &outputData,
     outputData = P_Gain * inputData;
     // D caculate
     outputData += D_Gain * (inputData - last_D_Data);
-    last_D_Data = I_Gain * inputData;
+    last_D_Data = inputData;
     // I caculate
     last_I_Data += I_Gain * inputData;
+    if (last_I_Data > I_Max)
+        last_I_Data = I_Max;
+    if (last_I_Data < I_Max * -1)
+        last_I_Data = I_Max * -1;
+    // P_I_D Mix OUTPUT
+    outputData += last_I_Data;
+}
+
+void RockPiAPMAPI::RockPiAPM::PID_CaculateExtend(float inputDataP, float inputDataI, float inputDataD, float &outputData,
+                                                 float &last_I_Data, float &last_D_Data,
+                                                 float P_Gain, float I_Gain, float D_Gain, float I_Max)
+{
+    // P caculate
+    outputData = P_Gain * inputDataP;
+    // D caculate
+    outputData += D_Gain * (inputDataD - last_D_Data);
+    last_D_Data = inputDataD;
+    // I caculate
+    last_I_Data += inputDataI * I_Gain;
+    if (last_I_Data > I_Max)
+        last_I_Data = I_Max;
+    if (last_I_Data < I_Max * -1)
+        last_I_Data = I_Max * -1;
+    // P_I_D Mix OUTPUT
+    outputData += last_I_Data;
+}
+
+void RockPiAPMAPI::RockPiAPM::PID_CaculateHyper(float inputDataP, float inputDataI, float inputDataD, float &outputData,
+                                                float &last_I_Data, float &last_D_Data,
+                                                float P_Gain, float I_Gain, float D_Gain, float I_Max)
+{
+    // P caculate
+    outputData = P_Gain * inputDataP;
+    // D caculate
+    outputData += D_Gain * inputDataD;
+    // I caculate
+    last_I_Data += inputDataI * I_Gain;
     if (last_I_Data > I_Max)
         last_I_Data = I_Max;
     if (last_I_Data < I_Max * -1)
@@ -215,6 +266,7 @@ void RockPiAPMAPI::RockPiAPM::SaftyCheck()
 void RockPiAPMAPI::RockPiAPM::ConfigReader(APMSettinngs APMInit)
 {
     //==========================================================Device Type=======/
+    RF.RC_Type = RCIsCRSF;
     DF.I2CDevice = APMInit.DC.__I2CDevice;
     DF.RCDevice = "/dev/ttyS2";
     DF.MPUDeviceSPI = "/dev/spidev0.0";
@@ -254,14 +306,18 @@ void RockPiAPMAPI::RockPiAPM::DebugOutPut()
               << "\r\n";
     std::cout << "SF._uORB_Gryo_Pitch" << SF._uORB_MPU_Data._uORB_Gryo_Pitch
               << "\r\n";
-    std::cout << "RF._uORB_RC_Channel_PWM[1]" << RF._uORB_RC_Channel_PWM[1]
-              << "\r\n";
-    std::cout << "RF._uORB_RC_Channel_PWM[2]" << RF._uORB_RC_Channel_PWM[2]
-              << "\r\n";
-    std::cout << "RF._uORB_RC_Channel_PWM[3]" << RF._uORB_RC_Channel_PWM[3]
-              << "\r\n";
-    std::cout << "RF._uORB_RC_Channel_PWM[4]" << RF._uORB_RC_Channel_PWM[4]
-              << "\r\n";
+    // std::cout << "RF._uORB_RC_Channel_PWM[0]" << RF._uORB_RC_Channel_PWM[0] // roll 1000 - 2000
+    //           << "\r\n";
+    // std::cout << "RF._uORB_RC_Channel_PWM[1]" << RF._uORB_RC_Channel_PWM[1] // pitch 1000 - 2000
+    //           << "\r\n";
+    // std::cout << "RF._uORB_RC_Channel_PWM[2]" << RF._uORB_RC_Channel_PWM[2] // oil 1000 - 2000
+    //           << "\r\n";
+    // std::cout << "RF._uORB_RC_Channel_PWM[3]" << RF._uORB_RC_Channel_PWM[3] // yaw  1000 - 2000
+    //           << "\r\n";
+    // std::cout << "RF._uORB_RC_Channel_PWM[4]" << RF._uORB_RC_Channel_PWM[4] // stop
+    //           << "\r\n";
+    // std::cout << "RF._uORB_RC_Channel_PWM[5]" << RF._uORB_RC_Channel_PWM[5] // g z 1000 1500 2000
+    //           << "\r\n";
     std::cout << "======================================"
               << "\r\n";
 }
