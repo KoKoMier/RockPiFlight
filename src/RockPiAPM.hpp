@@ -28,6 +28,14 @@
 #define RCIsSbus 1
 #define RCIsCRSF 2
 
+#define FILTERIMUDTLPFCUTOFF 1.f
+#define FILTERBAROLPFCUTOFF 1.f
+#define FILTERTHROTTLELPFCUTOFF 4.f
+#define FILTERPOSOUTLPFCUTOFF 4.f
+#define FILTERMAGCUTOFF 5.f
+
+#define PID_DT_DEFAULT 250.f
+
 namespace RockPiAPMAPI
 {
     inline volatile std::sig_atomic_t SystemSignal;
@@ -114,6 +122,52 @@ namespace RockPiAPMAPI
         {
             float _flag_PID_Rate_Limit = 500.f;
 
+            float _uORB_PID_GYaw_Output;
+            float _uORB_PID_AngleRate_Pitch;
+            float _uORB_PID_AngleRate__Roll;
+
+            float _uORB_PID_D_Last_Value__Roll = 0;
+            float _uORB_PID_D_Last_Value_Pitch = 0;
+            float _uORB_PID_D_Last_Value___Yaw = 0;
+
+            float _uORB_PID_I_Last_Value__Roll = 0;
+            float _uORB_PID_I_Last_Value_Pitch = 0;
+            float _uORB_PID_I_Last_Value___Yaw = 0;
+
+            float _uORB_PID__Roll_Input = 0;
+            float _uORB_PID_Pitch_Input = 0;
+
+            float _uORB_Leveling__Roll = 0;
+            float _uORB_Leveling_Pitch = 0;
+            float _uORB_Leveling___Yaw = 0;
+
+            float _flag_PID_P__Roll_Gain = 0;
+            float _flag_PID_P_Pitch_Gain = 0;
+            float _flag_PID_P___Yaw_Gain = 0;
+
+            float _flag_PID_I__Roll_Gain = 0;
+            float _flag_PID_I_Pitch_Gain = 0;
+            float _flag_PID_I___Yaw_Gain = 0;
+            float _flag_PID_I__Roll_Max__Value = 0;
+            float _flag_PID_I_Pitch_Max__Value = 0;
+            float _flag_PID_I___Yaw_Max__Value = 0;
+            float _uORB_PID_I_Dynamic_Gain = 1.f;
+
+            float _flag_PID_D__Roll_Gain = 0;
+            float _flag_PID_D_Pitch_Gain = 0;
+            float _flag_PID_D___Yaw_Gain = 0;
+
+			float _flag_PID_Level_Max = 0;
+
+            float _uORB_PID_TPA_Beta = 1.f;
+
+            float _flag_Filter_PID_I_CutOff = 30.f;
+            float _flag_Filter_PID_D_ST1_CutOff = 100.f;
+            float _flag_Filter_PID_D_ST2_CutOff = 200.f;
+            float _flag_Filter_AngleRate_CutOff = 20;
+
+			float _flag_PID_AngleRate___Yaw_Gain = 5.f;
+
         } PF;
         struct ESCINFO
         {
@@ -131,6 +185,8 @@ namespace RockPiAPMAPI
             const int _Flag_Lock_Throttle = 1000;
             const int _Flag_Max__Throttle = 2000;
 
+			float _flag_YAWOut_Reverse = 1.f;
+
         } EF;
 
         struct TaskThread
@@ -141,6 +197,10 @@ namespace RockPiAPMAPI
             float _flag_IMUFlowFreq = 1000.f;
             float _flag_RTXFlowFreq = 250.f;
             float _flag_ESCFlowFreq = 1000.f;
+
+            float _Tmp_IMUAttThreadDT = 0;
+            float _Tmp_IMUAttThreadLast = 0;
+            float _uORB_IMUAttThreadDT = 0;
 
             std::unique_ptr<FlowThread> IMUFlow;
             std::unique_ptr<FlowThread> RTXFlow;
@@ -161,6 +221,15 @@ namespace RockPiAPMAPI
             std::unique_ptr<RPiMPU6500> MPUDevice;
             std::unique_ptr<CRSF> CRSFInit;
 
+            pt1Filter_t AngleRateLPF[3];
+            pt1Filter_t IMUDtLPF;
+            pt1Filter_t ItermFilterRoll;
+            pt1Filter_t DtermFilterRoll;
+            pt1Filter_t DtermFilterRollST2;
+			pt1Filter_t ItermFilterPitch;
+			pt1Filter_t DtermFilterPitch;
+			pt1Filter_t DtermFilterPitchST2;
+
         } DF;
 
         struct SensorsINFO
@@ -171,6 +240,7 @@ namespace RockPiAPMAPI
             int _flag_MPU_Flip_Pitch;
             int _flag_MPU_Flip___Yaw;
             double _flag_MPU_Accel_Cali[20];
+            int _flag_Filter_GYaw_CutOff = 0;
 
         } SF;
 
@@ -180,6 +250,10 @@ namespace RockPiAPMAPI
             int _uORB_RC_Channel_PWM[16] = {1500, 1500, 1500, 1500, 2000, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             int _Tmp_RC_Data[36] = {0};
 
+			int _uORB_RC_Out__Roll = 0;
+			int _uORB_RC_Out_Pitch = 0;
+			int _uORB_RC_Out_Throttle = 0;
+			int _uORB_RC_Out___Yaw = 0;
         } RF;
 
     private:

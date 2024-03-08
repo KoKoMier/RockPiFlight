@@ -38,6 +38,20 @@ int RockPiAPMAPI::RockPiAPM::RockPiAPMInit(APMSettinngs APMInit)
             DF.CRSFInit.reset(new CRSF(DF.RCDevice.c_str()));
         }
     }
+    //------------------------------------------------------------------------------------//
+    {
+        pt1FilterInit(&DF.AngleRateLPF[0], PF._flag_Filter_AngleRate_CutOff, 0.f);
+        pt1FilterInit(&DF.AngleRateLPF[1], PF._flag_Filter_AngleRate_CutOff, 0.f);
+        pt1FilterInit(&DF.AngleRateLPF[2], PF._flag_Filter_AngleRate_CutOff, 0.f);
+        pt1FilterInit(&DF.ItermFilterRoll, PF._flag_Filter_PID_I_CutOff, 0.f);
+        pt1FilterInit(&DF.DtermFilterRoll, PF._flag_Filter_PID_D_ST1_CutOff, 0.f);
+        pt1FilterInit(&DF.DtermFilterRollST2, PF._flag_Filter_PID_D_ST2_CutOff, 0.f);
+        pt1FilterInit(&DF.ItermFilterPitch, PF._flag_Filter_PID_I_CutOff, 0.f);
+		pt1FilterInit(&DF.DtermFilterPitch, PF._flag_Filter_PID_D_ST1_CutOff, 0.f);
+		pt1FilterInit(&DF.DtermFilterPitchST2, PF._flag_Filter_PID_D_ST2_CutOff, 0.f);
+        pt1FilterInit(&DF.IMUDtLPF, FILTERIMUDTLPFCUTOFF, 0.0f);
+    }
+
     return 0;
 }
 
@@ -162,18 +176,104 @@ void RockPiAPMAPI::RockPiAPM::RockPiAPMStartUp()
 
 void RockPiAPMAPI::RockPiAPM::AttitudeUpdate()
 {
+    TF._Tmp_IMUAttThreadDT = GetTimestamp() - TF._Tmp_IMUAttThreadLast;
+    TF._uORB_IMUAttThreadDT = (int)pt1FilterApply4(&DF.IMUDtLPF, (int)TF._Tmp_IMUAttThreadDT, FILTERIMUDTLPFCUTOFF, 1.f / TF._flag_IMUFlowFreq);
+
     {
+
         // IMU SaftyChecking---------------------------------------------------------//
         if (SF._uORB_MPU_Data._uORB_Real__Roll > 70 || SF._uORB_MPU_Data._uORB_Real__Roll < -70 ||
             SF._uORB_MPU_Data._uORB_Real_Pitch > 70 || SF._uORB_MPU_Data._uORB_Real_Pitch < -70)
         {
             ////////////////////////////////////////////////////////////////////////////////
         }
+        if (PF._flag_Filter_AngleRate_CutOff != 0)
+            PF._uORB_PID_AngleRate__Roll = pt1FilterApply4(&DF.AngleRateLPF[0], SF._uORB_MPU_Data._uORB_Real__Roll,
+                                                           PF._flag_Filter_AngleRate_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        else
+            PF._uORB_PID_AngleRate__Roll = SF._uORB_MPU_Data._uORB_Real__Roll;
+        //
+        if (PF._flag_Filter_AngleRate_CutOff != 0)
+            PF._uORB_PID_AngleRate_Pitch = pt1FilterApply4(&DF.AngleRateLPF[1], SF._uORB_MPU_Data._uORB_Real_Pitch,
+                                                           PF._flag_Filter_AngleRate_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        else
+            PF._uORB_PID_AngleRate_Pitch = SF._uORB_MPU_Data._uORB_Real_Pitch;
+        //
+        if (SF._flag_Filter_GYaw_CutOff != 0)
+            PF._uORB_PID_GYaw_Output = pt1FilterApply4(&DF.AngleRateLPF[2], SF._uORB_MPU_Data._uORB_Gryo___Yaw,
+                                                       SF._flag_Filter_GYaw_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        else
+            PF._uORB_PID_GYaw_Output = SF._uORB_MPU_Data._uORB_Gryo___Yaw;
         SF._uORB_MPU_Data._uORB_Gryo_Pitch = SF._uORB_MPU_Data._uORB_Gryo_Pitch > PF._flag_PID_Rate_Limit ? PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo_Pitch;
         SF._uORB_MPU_Data._uORB_Gryo_Pitch = SF._uORB_MPU_Data._uORB_Gryo_Pitch < -1 * PF._flag_PID_Rate_Limit ? -1 * PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo_Pitch;
         SF._uORB_MPU_Data._uORB_Gryo__Roll = SF._uORB_MPU_Data._uORB_Gryo__Roll > PF._flag_PID_Rate_Limit ? PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo__Roll;
         SF._uORB_MPU_Data._uORB_Gryo__Roll = SF._uORB_MPU_Data._uORB_Gryo__Roll < -1 * PF._flag_PID_Rate_Limit ? -1 * PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo__Roll;
-        
+        std::cout << "SF._uORB_Real__Roll" << PF._uORB_PID_AngleRate__Roll
+                  << "\r\n";
+        std::cout << "SF._uORB_Real_Pitch" << PF._uORB_PID_AngleRate_Pitch
+                  << "\r\n";
+        std::cout << "SF._uORB_PID_GYaw_Output" << PF._uORB_PID_GYaw_Output
+                  << "\r\n";
+        //--------------------------------------------------------------------------//
+        // Roll PID
+        float ROLLDInput = SF._uORB_MPU_Data._uORB_Gryo__Roll - PF._uORB_PID_D_Last_Value__Roll;
+        PF._uORB_PID_D_Last_Value__Roll = SF._uORB_MPU_Data._uORB_Gryo__Roll;
+        float ROLLITERM = PF._uORB_PID__Roll_Input;
+        float ROLLDTERM = ROLLDInput;
+        if (PF._flag_Filter_PID_I_CutOff)
+            ROLLITERM = pt1FilterApply4(&DF.ItermFilterRoll, PF._uORB_PID__Roll_Input, PF._flag_Filter_PID_I_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        if (PF._flag_Filter_PID_D_ST1_CutOff)
+            ROLLDTERM = pt1FilterApply4(&DF.DtermFilterRoll, ROLLDInput, PF._flag_Filter_PID_D_ST1_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        if (PF._flag_Filter_PID_D_ST2_CutOff)
+            ROLLDTERM = pt1FilterApply4(&DF.DtermFilterRollST2, ROLLDTERM, PF._flag_Filter_PID_D_ST2_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        PID_CaculateHyper((PF._uORB_PID__Roll_Input),
+                          (ROLLITERM * (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)),
+                          (ROLLDTERM / (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)),
+                          PF._uORB_Leveling__Roll, PF._uORB_PID_I_Last_Value__Roll, PF._uORB_PID_D_Last_Value__Roll,
+                          (PF._flag_PID_P__Roll_Gain * PF._uORB_PID_TPA_Beta),
+                          (PF._flag_PID_I__Roll_Gain * PF._uORB_PID_I_Dynamic_Gain),
+                          (PF._flag_PID_D__Roll_Gain * PF._uORB_PID_TPA_Beta),
+                          PF._flag_PID_I__Roll_Max__Value);
+        if (PF._uORB_Leveling__Roll > PF._flag_PID_Level_Max)
+            PF._uORB_Leveling__Roll = PF._flag_PID_Level_Max;
+        if (PF._uORB_Leveling__Roll < PF._flag_PID_Level_Max * -1)
+            PF._uORB_Leveling__Roll = PF._flag_PID_Level_Max * -1;
+
+        // Pitch PID
+        float PITCHDInput = SF._uORB_MPU_Data._uORB_Gryo_Pitch - PF._uORB_PID_D_Last_Value_Pitch;
+        PF._uORB_PID_D_Last_Value_Pitch = SF._uORB_MPU_Data._uORB_Gryo_Pitch;
+        float PITCHITERM = PF._uORB_PID_Pitch_Input;
+        float PITCHDTERM = PITCHDInput;
+        if (PF._flag_Filter_PID_I_CutOff)
+            PITCHITERM = pt1FilterApply4(&DF.ItermFilterPitch, PF._uORB_PID_Pitch_Input, PF._flag_Filter_PID_I_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        if (PF._flag_Filter_PID_D_ST1_CutOff)
+            PITCHDTERM = pt1FilterApply4(&DF.DtermFilterPitch, PITCHDInput, PF._flag_Filter_PID_D_ST1_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        if (PF._flag_Filter_PID_D_ST2_CutOff)
+            PITCHDTERM = pt1FilterApply4(&DF.DtermFilterPitchST2, PITCHDTERM, PF._flag_Filter_PID_D_ST2_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+        PID_CaculateHyper((PF._uORB_PID_Pitch_Input),
+                          (PITCHITERM * (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)),
+                          (PITCHDTERM / (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)),
+                          PF._uORB_Leveling_Pitch, PF._uORB_PID_I_Last_Value_Pitch, PF._uORB_PID_D_Last_Value_Pitch,
+                          (PF._flag_PID_P_Pitch_Gain * PF._uORB_PID_TPA_Beta),
+                          (PF._flag_PID_I_Pitch_Gain * PF._uORB_PID_I_Dynamic_Gain),
+                          (PF._flag_PID_D_Pitch_Gain * PF._uORB_PID_TPA_Beta),
+                          PF._flag_PID_I_Pitch_Max__Value);
+        if (PF._uORB_Leveling_Pitch > PF._flag_PID_Level_Max)
+            PF._uORB_Leveling_Pitch = PF._flag_PID_Level_Max;
+        if (PF._uORB_Leveling_Pitch < PF._flag_PID_Level_Max * -1)
+            PF._uORB_Leveling_Pitch = PF._flag_PID_Level_Max * -1;
+
+        // Yaw PID
+        PID_CaculateExtend((((PF._uORB_PID_GYaw_Output + RF._uORB_RC_Out___Yaw) / 15.f) * PF._flag_PID_AngleRate___Yaw_Gain) * EF._flag_YAWOut_Reverse,
+                           ((((PF._uORB_PID_GYaw_Output + RF._uORB_RC_Out___Yaw) / 15.f) * PF._flag_PID_AngleRate___Yaw_Gain) * (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)) * EF._flag_YAWOut_Reverse,
+                           ((((PF._uORB_PID_GYaw_Output) / 15.f) * PF._flag_PID_AngleRate___Yaw_Gain) / (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)) * EF._flag_YAWOut_Reverse,
+                           PF._uORB_Leveling___Yaw, PF._uORB_PID_I_Last_Value___Yaw, PF._uORB_PID_D_Last_Value___Yaw,
+                           PF._flag_PID_P___Yaw_Gain, (PF._flag_PID_I___Yaw_Gain * PF._uORB_PID_I_Dynamic_Gain), PF._flag_PID_D___Yaw_Gain, PF._flag_PID_I___Yaw_Max__Value);
+
+        if (PF._uORB_Leveling___Yaw > PF._flag_PID_Level_Max)
+            PF._uORB_Leveling___Yaw = PF._flag_PID_Level_Max;
+        if (PF._uORB_Leveling___Yaw < PF._flag_PID_Level_Max * -1)
+            PF._uORB_Leveling___Yaw = PF._flag_PID_Level_Max * -1;
     }
 }
 
@@ -298,14 +398,14 @@ int RockPiAPMAPI::RockPiAPM::GetTimestamp()
 
 void RockPiAPMAPI::RockPiAPM::DebugOutPut()
 {
-    std::cout << "SF._uORB_Real__Roll" << SF._uORB_MPU_Data._uORB_Real__Roll
-              << "\r\n";
-    std::cout << "SF._uORB_Real_Pitch" << SF._uORB_MPU_Data._uORB_Real_Pitch
-              << "\r\n";
-    std::cout << "SF._uORB_Gryo__Roll" << SF._uORB_MPU_Data._uORB_Gryo__Roll
-              << "\r\n";
-    std::cout << "SF._uORB_Gryo_Pitch" << SF._uORB_MPU_Data._uORB_Gryo_Pitch
-              << "\r\n";
+    // std::cout << "SF._uORB_Real__Roll" << SF._uORB_MPU_Data._uORB_Real__Roll
+    //           << "\r\n";
+    // std::cout << "SF._uORB_Real_Pitch" << SF._uORB_MPU_Data._uORB_Real_Pitch
+    //           << "\r\n";
+    // std::cout << "SF._uORB_Gryo__Roll" << SF._uORB_MPU_Data._uORB_Gryo__Roll
+    //           << "\r\n";
+    // std::cout << "SF._uORB_Gryo_Pitch" << SF._uORB_MPU_Data._uORB_Gryo_Pitch
+    //           << "\r\n";
     // std::cout << "RF._uORB_RC_Channel_PWM[0]" << RF._uORB_RC_Channel_PWM[0] // roll 1000 - 2000
     //           << "\r\n";
     // std::cout << "RF._uORB_RC_Channel_PWM[1]" << RF._uORB_RC_Channel_PWM[1] // pitch 1000 - 2000
