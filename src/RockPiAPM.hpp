@@ -113,14 +113,14 @@ namespace RockPiAPMAPI
 
         struct SafyINFO
         {
-            bool _flag_ESC_ARMED = false;
+            bool _flag_ESC_ARMED = true;
             bool _flag_MPUCalibrating = false;
 
         } AF;
 
         struct PIDINFO
         {
-            float _flag_PID_Rate_Limit = 500.f;
+            float _flag_PID_Rate_Limit = 700.f;
 
             float _uORB_PID_GYaw_Output;
             float _uORB_PID_AngleRate_Pitch;
@@ -141,51 +141,63 @@ namespace RockPiAPMAPI
             float _uORB_Leveling_Pitch = 0;
             float _uORB_Leveling___Yaw = 0;
 
-            float _flag_PID_P__Roll_Gain = 0;
-            float _flag_PID_P_Pitch_Gain = 0;
-            float _flag_PID_P___Yaw_Gain = 0;
+            float _flag_PID_P__Roll_Gain = 1.3;
+            float _flag_PID_P_Pitch_Gain = 1.3;
+            float _flag_PID_P___Yaw_Gain = 3.5;
 
-            float _flag_PID_I__Roll_Gain = 0;
-            float _flag_PID_I_Pitch_Gain = 0;
-            float _flag_PID_I___Yaw_Gain = 0;
-            float _flag_PID_I__Roll_Max__Value = 0;
-            float _flag_PID_I_Pitch_Max__Value = 0;
-            float _flag_PID_I___Yaw_Max__Value = 0;
+            float _flag_PID_I__Roll_Gain = 0.0002; // 0.002
+            float _flag_PID_I_Pitch_Gain = 0.0002; // 0.002
+            float _flag_PID_I___Yaw_Gain = 0.0025; // 0.025
+            float _flag_PID_I__Roll_Max__Value = 200;
+            float _flag_PID_I_Pitch_Max__Value = 200;
+            float _flag_PID_I___Yaw_Max__Value = 200;
             float _uORB_PID_I_Dynamic_Gain = 1.f;
 
-            float _flag_PID_D__Roll_Gain = 0;
-            float _flag_PID_D_Pitch_Gain = 0;
+            float _flag_PID_D__Roll_Gain = 65;
+            float _flag_PID_D_Pitch_Gain = 65;
             float _flag_PID_D___Yaw_Gain = 0;
 
-			float _flag_PID_Level_Max = 0;
+            float _flag_PID_Level_Max = 400;
 
             float _uORB_PID_TPA_Beta = 1.f;
 
-            float _flag_Filter_PID_I_CutOff = 30.f;
-            float _flag_Filter_PID_D_ST1_CutOff = 100.f;
-            float _flag_Filter_PID_D_ST2_CutOff = 200.f;
+            float _flag_Filter_PID_I_CutOff = 15.f;
+            float _flag_Filter_PID_D_ST1_CutOff = 90.f;
+            float _flag_Filter_PID_D_ST2_CutOff = 120.f;
             float _flag_Filter_AngleRate_CutOff = 20;
 
-			float _flag_PID_AngleRate___Yaw_Gain = 5.f;
-
+            float _flag_PID_AngleRate___Yaw_Gain = 10.f;
+            float _flag_PID_RCAngle__Roll_Gain = 0.6;
+            float _flag_PID_RCAngle_Pitch_Gain = 0.6;
+            float _flag_PID_AngleRate__Roll_Gain = 10.0;
+            float _flag_PID_AngleRate_Pitch_Gain = 10.0;
         } PF;
         struct ESCINFO
         {
             int ESCPLFrequency = 1526;
             GeneratorType ESCControllerType = GeneratorType::Hardware_ONESHOT125;
 
-            int _flag_A1_Pin = 0;
-            int _flag_A2_Pin = 1;
-            int _flag_B1_Pin = 2;
-            int _flag_B2_Pin = 3;
+            int _flag_A1_Pin = 15;
+            int _flag_A2_Pin = 13;
+            int _flag_B1_Pin = 11;
+            int _flag_B2_Pin = 12;
             int _uORB_A1_Speed = 0;
             int _uORB_A2_Speed = 0;
             int _uORB_B1_Speed = 0;
             int _uORB_B2_Speed = 0;
+            int _Tmp_A1_Speed = 0;
+            int _Tmp_A2_Speed = 0;
+            int _Tmp_B1_Speed = 0;
+            int _Tmp_B2_Speed = 0;
             const int _Flag_Lock_Throttle = 1000;
             const int _Flag_Max__Throttle = 2000;
 
-			float _flag_YAWOut_Reverse = 1.f;
+            float _flag_YAWOut_Reverse = 1.f;
+            double _uORB_Total_Throttle = 0.0;
+            int _uORB_Dynamic_ThrottleMin = 1000;
+            int _uORB_Dynamic_ThrottleMax = 2000;
+
+            int _Flag_Lazy_Throttle = 1096;
 
         } EF;
 
@@ -226,9 +238,9 @@ namespace RockPiAPMAPI
             pt1Filter_t ItermFilterRoll;
             pt1Filter_t DtermFilterRoll;
             pt1Filter_t DtermFilterRollST2;
-			pt1Filter_t ItermFilterPitch;
-			pt1Filter_t DtermFilterPitch;
-			pt1Filter_t DtermFilterPitchST2;
+            pt1Filter_t ItermFilterPitch;
+            pt1Filter_t DtermFilterPitch;
+            pt1Filter_t DtermFilterPitchST2;
 
         } DF;
 
@@ -241,19 +253,31 @@ namespace RockPiAPMAPI
             int _flag_MPU_Flip___Yaw;
             double _flag_MPU_Accel_Cali[20];
             int _flag_Filter_GYaw_CutOff = 0;
-
+            int _flag_MPU_Down = 0;
         } SF;
 
         struct RCINFO
         {
             int RC_Type;
-            int _uORB_RC_Channel_PWM[16] = {1500, 1500, 1500, 1500, 2000, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+            int _uORB_RC_Channel_PWM[16] = {1500, 1500, 1000, 1500, 1000, 1000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
             int _Tmp_RC_Data[36] = {0};
+            int _flag_RC_Max_PWM_Value = 2000;
+            int _flag_RC_Mid_PWM_Value = 1500;
+            int _flag_RC_Min_PWM_Value = 1000;
 
-			int _uORB_RC_Out__Roll = 0;
-			int _uORB_RC_Out_Pitch = 0;
-			int _uORB_RC_Out_Throttle = 0;
-			int _uORB_RC_Out___Yaw = 0;
+            int _uORB_RC_Out__Roll = 0;
+            int _uORB_RC_Out_Pitch = 0;
+            int _uORB_RC_Out_Throttle = 0;
+            int _uORB_RC_Out___Yaw = 0;
+
+            int _Tmp_RC_Out__Roll = 0;
+            int _Tmp_RC_Out_Pitch = 0;
+            int _Tmp_RC_Out_Throttle = 0;
+            int _Tmp_RC_Out___Yaw = 0;
+
+            int _flag_RCIsReserv__Roll = -1;
+            int _flag_RCIsReserv_Pitch = -1;
+            int _flag_RCIsReserv___Yaw = 1;
         } RF;
 
     private:
