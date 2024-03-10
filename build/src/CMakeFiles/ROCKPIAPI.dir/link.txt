@@ -1,0 +1,2 @@
+/usr/bin/ar qc libROCKPIAPI.a  CMakeFiles/ROCKPIAPI.dir/RockPiAPM.cpp.o
+/usr/bin/ranlib libROCKPIAPI.a

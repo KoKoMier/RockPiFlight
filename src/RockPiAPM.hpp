@@ -141,8 +141,8 @@ namespace RockPiAPMAPI
             float _uORB_Leveling_Pitch = 0;
             float _uORB_Leveling___Yaw = 0;
 
-            float _flag_PID_P__Roll_Gain = 1.3;
-            float _flag_PID_P_Pitch_Gain = 1.3;
+            float _flag_PID_P__Roll_Gain = 2.5;
+            float _flag_PID_P_Pitch_Gain = 2.5;
             float _flag_PID_P___Yaw_Gain = 3.5;
 
             float _flag_PID_I__Roll_Gain = 0.0002; // 0.002
@@ -153,8 +153,8 @@ namespace RockPiAPMAPI
             float _flag_PID_I___Yaw_Max__Value = 200;
             float _uORB_PID_I_Dynamic_Gain = 1.f;
 
-            float _flag_PID_D__Roll_Gain = 65;
-            float _flag_PID_D_Pitch_Gain = 65;
+            float _flag_PID_D__Roll_Gain = 200;
+            float _flag_PID_D_Pitch_Gain = 200;
             float _flag_PID_D___Yaw_Gain = 0;
 
             float _flag_PID_Level_Max = 400;
