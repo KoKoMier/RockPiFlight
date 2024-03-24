@@ -37,6 +37,6 @@ git submodule update --init --recursive
 ```
 ./RockPiFlight -r 5inchDefault
 ```
-##The initial
+## The initial
 https://github.com/TSKangetsu
 
