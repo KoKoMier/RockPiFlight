@@ -33,7 +33,7 @@ git submodule update --init --recursive
 ./RockPiFlight -a 5inchDefault
 ```
 最后就可以开始执行无人机飞行的代码了,若是发现无人机抖动，很有可能是MPU6500放的方向与作者不一样，需要修改APMconfig.json中的Sensor里面_flag_MPU_Flip的参数，
-从而通过旋转坐标系来实现稳定，最后就可以安装上桨叶实现飞行
+从而通过旋转坐标系来实现稳定，最后就可以安装上桨叶实现飞行.
 ```
 ./RockPiFlight -r 5inchDefault
 ```
