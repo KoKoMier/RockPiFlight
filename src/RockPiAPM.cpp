@@ -47,8 +47,8 @@ int RockPiAPMAPI::RockPiAPM::RockPiAPMInit(APMSettinngs APMInit)
         pt1FilterInit(&DF.DtermFilterRoll, PF._flag_Filter_PID_D_ST1_CutOff, 0.f);
         pt1FilterInit(&DF.DtermFilterRollST2, PF._flag_Filter_PID_D_ST2_CutOff, 0.f);
         pt1FilterInit(&DF.ItermFilterPitch, PF._flag_Filter_PID_I_CutOff, 0.f);
-		pt1FilterInit(&DF.DtermFilterPitch, PF._flag_Filter_PID_D_ST1_CutOff, 0.f);
-		pt1FilterInit(&DF.DtermFilterPitchST2, PF._flag_Filter_PID_D_ST2_CutOff, 0.f);
+        pt1FilterInit(&DF.DtermFilterPitch, PF._flag_Filter_PID_D_ST1_CutOff, 0.f);
+        pt1FilterInit(&DF.DtermFilterPitchST2, PF._flag_Filter_PID_D_ST2_CutOff, 0.f);
         pt1FilterInit(&DF.IMUDtLPF, FILTERIMUDTLPFCUTOFF, 0.0f);
     }
 
@@ -100,7 +100,8 @@ void RockPiAPMAPI::RockPiAPM::IMUSensorsTaskReg()
                 }
             }
             //=====================================================================//
-            AttitudeUpdate();
+            if (SF._flag_MPU_Down == 1)
+                AttitudeUpdate();
         },
         TF._flag_Sys_CPU_Asign, TF._flag_IMUFlowFreq));
 }
@@ -126,6 +127,37 @@ void RockPiAPMAPI::RockPiAPM::ControllerTaskReg()
                     }
                 }
             }
+            if (SF._uORB_MPU_Data._uORB_Real__Roll < 2 && SF._uORB_MPU_Data._uORB_Real__Roll > -2 &&
+                SF._uORB_MPU_Data._uORB_Real_Pitch < 4.5 && SF._uORB_MPU_Data._uORB_Real_Pitch > -4.5)
+            {
+                SF._flag_MPU_Down = 1;
+            }
+            {
+                // RC Out Caculation
+                RF._Tmp_RC_Out__Roll = (RF._uORB_RC_Channel_PWM[0] - RF._flag_RC_Mid_PWM_Value) * RF._flag_RCIsReserv__Roll;
+                RF._Tmp_RC_Out_Pitch = (RF._uORB_RC_Channel_PWM[1] - RF._flag_RC_Mid_PWM_Value) * RF._flag_RCIsReserv_Pitch;
+                RF._Tmp_RC_Out___Yaw = (RF._uORB_RC_Channel_PWM[3] - RF._flag_RC_Mid_PWM_Value) * RF._flag_RCIsReserv___Yaw;
+                RF._Tmp_RC_Out_Throttle = RF._uORB_RC_Channel_PWM[2];
+            }
+            if (RF._uORB_RC_Channel_PWM[4] < 1200)
+            {
+                AF._flag_ESC_ARMED = true;
+            }
+            else if (RF._uORB_RC_Channel_PWM[4] > 1800)
+            {
+                AF._flag_ESC_ARMED = false;
+            }
+            else
+            {
+                AF._flag_ESC_ARMED = true;
+            }
+            // RC data out
+            {
+                RF._uORB_RC_Out__Roll = RF._Tmp_RC_Out__Roll;
+                RF._uORB_RC_Out_Pitch = RF._Tmp_RC_Out_Pitch;
+                RF._uORB_RC_Out___Yaw = RF._Tmp_RC_Out___Yaw;
+                RF._uORB_RC_Out_Throttle = RF._Tmp_RC_Out_Throttle;
+            }
         },
         TF._flag_Sys_CPU_Asign, TF._flag_RTXFlowFreq));
 }
@@ -136,6 +168,7 @@ void RockPiAPMAPI::RockPiAPM::ESCUpdateTaskReg()
         [&]
         {
             DF.I2CLock.lock();
+
             if (AF._flag_ESC_ARMED)
             {
                 DF.ESCDevice->ESCUpdate(EF._flag_A1_Pin, EF._Flag_Lock_Throttle);
@@ -178,7 +211,6 @@ void RockPiAPMAPI::RockPiAPM::AttitudeUpdate()
 {
     TF._Tmp_IMUAttThreadDT = GetTimestamp() - TF._Tmp_IMUAttThreadLast;
     TF._uORB_IMUAttThreadDT = (int)pt1FilterApply4(&DF.IMUDtLPF, (int)TF._Tmp_IMUAttThreadDT, FILTERIMUDTLPFCUTOFF, 1.f / TF._flag_IMUFlowFreq);
-
     {
 
         // IMU SaftyChecking---------------------------------------------------------//
@@ -204,16 +236,25 @@ void RockPiAPMAPI::RockPiAPM::AttitudeUpdate()
                                                        SF._flag_Filter_GYaw_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
         else
             PF._uORB_PID_GYaw_Output = SF._uORB_MPU_Data._uORB_Gryo___Yaw;
+
+        // ---------------------------------------------------------------------//
+        PF._uORB_PID__Roll_Input = 0;
+        PF._uORB_PID_Pitch_Input = 0;
+        PF._uORB_PID__Roll_Input += RF._uORB_RC_Out__Roll * PF._flag_PID_RCAngle__Roll_Gain;
+        PF._uORB_PID_Pitch_Input += RF._uORB_RC_Out_Pitch * PF._flag_PID_RCAngle_Pitch_Gain;
+        float AngleEXPO__Roll = PF._uORB_PID_AngleRate__Roll * PF._flag_PID_AngleRate__Roll_Gain;
+        float AngleEXPO_Pitch = PF._uORB_PID_AngleRate_Pitch * PF._flag_PID_AngleRate_Pitch_Gain;
+        PF._uORB_PID__Roll_Input += AngleEXPO__Roll;
+        PF._uORB_PID_Pitch_Input += AngleEXPO_Pitch;
+
+        // ---------------------------------------------------------------------//
         SF._uORB_MPU_Data._uORB_Gryo_Pitch = SF._uORB_MPU_Data._uORB_Gryo_Pitch > PF._flag_PID_Rate_Limit ? PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo_Pitch;
         SF._uORB_MPU_Data._uORB_Gryo_Pitch = SF._uORB_MPU_Data._uORB_Gryo_Pitch < -1 * PF._flag_PID_Rate_Limit ? -1 * PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo_Pitch;
         SF._uORB_MPU_Data._uORB_Gryo__Roll = SF._uORB_MPU_Data._uORB_Gryo__Roll > PF._flag_PID_Rate_Limit ? PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo__Roll;
         SF._uORB_MPU_Data._uORB_Gryo__Roll = SF._uORB_MPU_Data._uORB_Gryo__Roll < -1 * PF._flag_PID_Rate_Limit ? -1 * PF._flag_PID_Rate_Limit : SF._uORB_MPU_Data._uORB_Gryo__Roll;
-        std::cout << "SF._uORB_Real__Roll" << PF._uORB_PID_AngleRate__Roll
-                  << "\r\n";
-        std::cout << "SF._uORB_Real_Pitch" << PF._uORB_PID_AngleRate_Pitch
-                  << "\r\n";
-        std::cout << "SF._uORB_PID_GYaw_Output" << PF._uORB_PID_GYaw_Output
-                  << "\r\n";
+        PF._uORB_PID__Roll_Input += SF._uORB_MPU_Data._uORB_Gryo__Roll;
+        PF._uORB_PID_Pitch_Input += SF._uORB_MPU_Data._uORB_Gryo_Pitch;
+
         //--------------------------------------------------------------------------//
         // Roll PID
         float ROLLDInput = SF._uORB_MPU_Data._uORB_Gryo__Roll - PF._uORB_PID_D_Last_Value__Roll;
@@ -226,6 +267,7 @@ void RockPiAPMAPI::RockPiAPM::AttitudeUpdate()
             ROLLDTERM = pt1FilterApply4(&DF.DtermFilterRoll, ROLLDInput, PF._flag_Filter_PID_D_ST1_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
         if (PF._flag_Filter_PID_D_ST2_CutOff)
             ROLLDTERM = pt1FilterApply4(&DF.DtermFilterRollST2, ROLLDTERM, PF._flag_Filter_PID_D_ST2_CutOff, ((float)TF._uORB_IMUAttThreadDT / 1000000.f));
+
         PID_CaculateHyper((PF._uORB_PID__Roll_Input),
                           (ROLLITERM * (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)),
                           (ROLLDTERM / (TF._uORB_IMUAttThreadDT / PID_DT_DEFAULT)),
@@ -270,11 +312,67 @@ void RockPiAPMAPI::RockPiAPM::AttitudeUpdate()
                            PF._uORB_Leveling___Yaw, PF._uORB_PID_I_Last_Value___Yaw, PF._uORB_PID_D_Last_Value___Yaw,
                            PF._flag_PID_P___Yaw_Gain, (PF._flag_PID_I___Yaw_Gain * PF._uORB_PID_I_Dynamic_Gain), PF._flag_PID_D___Yaw_Gain, PF._flag_PID_I___Yaw_Max__Value);
 
+        //----------------------------------------------------------//
+        EF._uORB_Total_Throttle = RF._uORB_RC_Out_Throttle;
         if (PF._uORB_Leveling___Yaw > PF._flag_PID_Level_Max)
             PF._uORB_Leveling___Yaw = PF._flag_PID_Level_Max;
         if (PF._uORB_Leveling___Yaw < PF._flag_PID_Level_Max * -1)
             PF._uORB_Leveling___Yaw = PF._flag_PID_Level_Max * -1;
+        {
+            EF._Tmp_B1_Speed = 0;
+            EF._Tmp_A1_Speed = 0;
+            EF._Tmp_A2_Speed = 0;
+            EF._Tmp_B2_Speed = 0;
+
+            EF._Tmp_B1_Speed = -PF._uORB_Leveling__Roll - PF._uORB_Leveling_Pitch - PF._uORB_Leveling___Yaw;
+            EF._Tmp_A1_Speed = -PF._uORB_Leveling__Roll + PF._uORB_Leveling_Pitch + PF._uORB_Leveling___Yaw;
+            EF._Tmp_A2_Speed = +PF._uORB_Leveling__Roll + PF._uORB_Leveling_Pitch - PF._uORB_Leveling___Yaw;
+            EF._Tmp_B2_Speed = +PF._uORB_Leveling__Roll - PF._uORB_Leveling_Pitch + PF._uORB_Leveling___Yaw;
+
+            if (EF._uORB_Total_Throttle < EF._uORB_Dynamic_ThrottleMin)
+                EF._uORB_Total_Throttle = EF._uORB_Dynamic_ThrottleMin;
+            else if (EF._uORB_Total_Throttle > EF._uORB_Dynamic_ThrottleMax)
+                EF._uORB_Total_Throttle = EF._uORB_Dynamic_ThrottleMax;
+            EF._Tmp_B1_Speed += EF._uORB_Total_Throttle;
+            EF._Tmp_A1_Speed += EF._uORB_Total_Throttle;
+            EF._Tmp_A2_Speed += EF._uORB_Total_Throttle;
+            EF._Tmp_B2_Speed += EF._uORB_Total_Throttle;
+
+            EF._Tmp_A1_Speed = EF._Tmp_A1_Speed < RF._flag_RC_Min_PWM_Value ? RF._flag_RC_Min_PWM_Value : EF._Tmp_A1_Speed;
+            EF._Tmp_A2_Speed = EF._Tmp_A2_Speed < RF._flag_RC_Min_PWM_Value ? RF._flag_RC_Min_PWM_Value : EF._Tmp_A2_Speed;
+            EF._Tmp_B1_Speed = EF._Tmp_B1_Speed < RF._flag_RC_Min_PWM_Value ? RF._flag_RC_Min_PWM_Value : EF._Tmp_B1_Speed;
+            EF._Tmp_B2_Speed = EF._Tmp_B2_Speed < RF._flag_RC_Min_PWM_Value ? RF._flag_RC_Min_PWM_Value : EF._Tmp_B2_Speed;
+
+            EF._Tmp_A1_Speed = EF._Tmp_A1_Speed > RF._flag_RC_Max_PWM_Value ? RF._flag_RC_Max_PWM_Value : EF._Tmp_A1_Speed;
+            EF._Tmp_A2_Speed = EF._Tmp_A2_Speed > RF._flag_RC_Max_PWM_Value ? RF._flag_RC_Max_PWM_Value : EF._Tmp_A2_Speed;
+            EF._Tmp_B1_Speed = EF._Tmp_B1_Speed > RF._flag_RC_Max_PWM_Value ? RF._flag_RC_Max_PWM_Value : EF._Tmp_B1_Speed;
+            EF._Tmp_B2_Speed = EF._Tmp_B2_Speed > RF._flag_RC_Max_PWM_Value ? RF._flag_RC_Max_PWM_Value : EF._Tmp_B2_Speed;
+
+            EF._uORB_A1_Speed = ((EF._Flag_Max__Throttle - EF._Flag_Lazy_Throttle) * (((float)EF._Tmp_A1_Speed - (float)RF._flag_RC_Min_PWM_Value) / (float)(RF._flag_RC_Max_PWM_Value - RF._flag_RC_Min_PWM_Value))) + EF._Flag_Lazy_Throttle;
+            EF._uORB_A2_Speed = ((EF._Flag_Max__Throttle - EF._Flag_Lazy_Throttle) * (((float)EF._Tmp_A2_Speed - (float)RF._flag_RC_Min_PWM_Value) / (float)(RF._flag_RC_Max_PWM_Value - RF._flag_RC_Min_PWM_Value))) + EF._Flag_Lazy_Throttle;
+            EF._uORB_B1_Speed = ((EF._Flag_Max__Throttle - EF._Flag_Lazy_Throttle) * (((float)EF._Tmp_B1_Speed - (float)RF._flag_RC_Min_PWM_Value) / (float)(RF._flag_RC_Max_PWM_Value - RF._flag_RC_Min_PWM_Value))) + EF._Flag_Lazy_Throttle;
+            EF._uORB_B2_Speed = ((EF._Flag_Max__Throttle - EF._Flag_Lazy_Throttle) * (((float)EF._Tmp_B2_Speed - (float)RF._flag_RC_Min_PWM_Value) / (float)(RF._flag_RC_Max_PWM_Value - RF._flag_RC_Min_PWM_Value))) + EF._Flag_Lazy_Throttle;
+
+            EF._uORB_A1_Speed = EF._uORB_A1_Speed < EF._Flag_Lazy_Throttle ? EF._Flag_Lazy_Throttle : EF._uORB_A1_Speed;
+            EF._uORB_A2_Speed = EF._uORB_A2_Speed < EF._Flag_Lazy_Throttle ? EF._Flag_Lazy_Throttle : EF._uORB_A2_Speed;
+            EF._uORB_B1_Speed = EF._uORB_B1_Speed < EF._Flag_Lazy_Throttle ? EF._Flag_Lazy_Throttle : EF._uORB_B1_Speed;
+            EF._uORB_B2_Speed = EF._uORB_B2_Speed < EF._Flag_Lazy_Throttle ? EF._Flag_Lazy_Throttle : EF._uORB_B2_Speed;
+
+            EF._uORB_A1_Speed = EF._uORB_A1_Speed > EF._Flag_Max__Throttle ? EF._Flag_Max__Throttle : EF._uORB_A1_Speed;
+            EF._uORB_A2_Speed = EF._uORB_A2_Speed > EF._Flag_Max__Throttle ? EF._Flag_Max__Throttle : EF._uORB_A2_Speed;
+            EF._uORB_B1_Speed = EF._uORB_B1_Speed > EF._Flag_Max__Throttle ? EF._Flag_Max__Throttle : EF._uORB_B1_Speed;
+            EF._uORB_B2_Speed = EF._uORB_B2_Speed > EF._Flag_Max__Throttle ? EF._Flag_Max__Throttle : EF._uORB_B2_Speed;
+            std::cout << "RF._uORB_A1_Speed " << EF._uORB_A1_Speed
+                      << "\r\n";
+            std::cout << "RF._uORB_A2_Speed " << EF._uORB_A2_Speed
+                      << "\r\n";
+            std::cout << "RF._uORB_B1_Speed " << EF._uORB_B1_Speed
+                      << "\r\n";
+            std::cout << "RF._uORB_B2_Speed " << EF._uORB_B2_Speed
+                      << "\r\n";
+        }
     }
+    TF._Tmp_IMUAttThreadLast = GetTimestamp();
 }
 
 void RockPiAPMAPI::RockPiAPM::PID_Caculate(float inputData, float &outputData,
