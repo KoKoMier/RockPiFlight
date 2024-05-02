@@ -1,0 +1,29 @@
+{
+    "5inchDefault": {
+        "Device": {
+            "__I2CDevice": "/dev/i2c-7"
+        },
+        "Filter": {},
+        "PID": {
+            "Output": {
+                "ESCControllerType": 2,
+                "ESCPLFrequency": 1526,
+                "_flag_A1_Pin": 15,
+                "_flag_A2_Pin": 13,
+                "_flag_B1_Pin": 11,
+                "_flag_B2_Pin": 12
+            }
+        },
+        "Sensor": {
+            "_flag_MPU6500_A_X_Cali": 5282.933702117066,
+            "_flag_MPU6500_A_X_Scal": 1.0007098541213744,
+            "_flag_MPU6500_A_Y_Cali": 7341.01739874071,
+            "_flag_MPU6500_A_Y_Scal": 0.9956861702205241,
+            "_flag_MPU6500_A_Z_Cali": 692.4727530458854,
+            "_flag_MPU6500_A_Z_Scal": 0.9844315136331507,
+            "_flag_MPU_Flip_Pitch": 0,
+            "_flag_MPU_Flip__Roll": 180,
+            "_flag_MPU_Flip___Yaw": 270
+        }
+    }
+}
